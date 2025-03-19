@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         //White-Listing wird bevorzugt in den meisten Projekten
                         .requestMatchers("/api/auth/me").permitAll()
+                        .requestMatchers("/api/customers/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(s ->
