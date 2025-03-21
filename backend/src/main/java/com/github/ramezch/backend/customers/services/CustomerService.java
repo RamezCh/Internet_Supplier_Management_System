@@ -4,6 +4,7 @@ import com.github.ramezch.backend.customers.models.Customer;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import com.github.ramezch.backend.exceptions.UsernameExistsException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +24,7 @@ public class CustomerService {
         return customerRepo.findByUsername(username);
     }
 
-    public Customer addCustomer(Customer customer) {
+    public Customer addCustomer( Customer customer) {
         Optional<Customer> checkCustomer = customerRepo.findByUsername(customer.username());
         if(checkCustomer.isPresent()) {
             throw new UsernameExistsException(customer.username());

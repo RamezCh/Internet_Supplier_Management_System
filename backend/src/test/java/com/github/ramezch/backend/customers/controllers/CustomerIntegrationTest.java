@@ -66,7 +66,7 @@ class CustomerIntegrationTest {
         repo.save(newCustomer);
         // WHEN
         mvc.perform(get(baseURL + "/" + newCustomer.username())
-                .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
@@ -81,18 +81,29 @@ class CustomerIntegrationTest {
     @Test
     @WithMockUser
     @DirtiesContext
+    void getCustomer_whenNotFound_returnNotFound() throws Exception {
+        // WHEN
+        mvc.perform(get(baseURL + "/nonexistent")
+                        .contentType(MediaType.APPLICATION_JSON))
+                // THEN
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser
+    @DirtiesContext
     void addCustomer_returnNewCustomer() throws Exception {
         // WHEN
         mvc.perform(post(baseURL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
                 {
                   "username": "new_customer",
                   "fullName":  "New Customer",
                   "notes": "test"
                 }
                 """))
-        // THEN
+                // THEN
                 .andExpect(status().isCreated())
                 .andExpect(content().json("""
                 {
@@ -106,7 +117,25 @@ class CustomerIntegrationTest {
     @Test
     @WithMockUser
     @DirtiesContext
-    void updateCustomer_whenExist_returnNewCustomer() throws Exception {
+    void addCustomer_whenInvalidData_returnBadRequest() throws Exception {
+        // WHEN
+        mvc.perform(post(baseURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                {
+                  "username": "",
+                  "fullName":  "",
+                  "notes": "test"
+                }
+                """))
+                // THEN
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser
+    @DirtiesContext
+    void updateCustomer_whenExist_returnUpdatedCustomer() throws Exception {
         // GIVEN
         repo.save(newCustomer);
         // WHEN
@@ -134,7 +163,25 @@ class CustomerIntegrationTest {
     @Test
     @WithMockUser
     @DirtiesContext
-    void deleteTask_whenExist_returnNoContent() throws Exception {
+    void updateCustomer_whenNotFound_returnNotFound() throws Exception {
+        // WHEN
+        mvc.perform(put(baseURL + "/nonexistent")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                          "username": "nonexistent",
+                          "fullName":  "Nonexistent Customer",
+                          "notes": "test"
+                        }
+                        """))
+                // THEN
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser
+    @DirtiesContext
+    void deleteCustomer_whenExist_returnNoContent() throws Exception {
         repo.save(newCustomer);
 
         // WHEN
@@ -142,5 +189,56 @@ class CustomerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 // THEN
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser
+    void deleteCustomer_whenNotExist_returnNotFound() throws Exception {
+        // WHEN
+        mvc.perform(delete(baseURL+"/new_customer")
+                        .contentType(MediaType.APPLICATION_JSON))
+                // THEN
+                .andExpect(status().isNotFound())
+                .andExpect(content().json("""
+                        {
+                        "message": "The Customer with username: new_customer could not be found."
+                        }
+                  """));
+    }
+
+    @Test
+    @WithMockUser
+    @DirtiesContext
+    void getCustomers_whenNoCustomersExist_returnEmptyList() throws Exception {
+        // WHEN
+        mvc.perform(get(baseURL)
+                        .contentType(MediaType.APPLICATION_JSON))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                            "content": []
+                        }
+                """));
+    }
+
+    @Test
+    @WithMockUser
+    @DirtiesContext
+    void addCustomer_whenUsernameAlreadyExists_returnConflict() throws Exception {
+        // GIVEN
+        repo.save(newCustomer);
+        // WHEN
+        mvc.perform(post(baseURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                {
+                  "username": "new_customer",
+                  "fullName":  "New Customer",
+                  "notes": "test"
+                }
+                """))
+                // THEN
+                .andExpect(status().isConflict());
     }
 }
