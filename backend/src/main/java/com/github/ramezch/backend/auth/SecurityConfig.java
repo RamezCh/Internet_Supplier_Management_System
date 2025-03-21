@@ -1,5 +1,6 @@
 package com.github.ramezch.backend.auth;
 
+import com.github.ramezch.backend.appuser.AppUserRoles;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +26,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         //White-Listing wird bevorzugt in den meisten Projekten
                         .requestMatchers("/api/auth/me").permitAll()
-                        .requestMatchers("/api/customers/**").permitAll()
+                        .requestMatchers("/api/customers/**").hasRole(AppUserRoles.USER.toString())
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(s ->

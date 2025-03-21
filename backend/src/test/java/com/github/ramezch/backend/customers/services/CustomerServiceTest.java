@@ -102,9 +102,7 @@ class CustomerServiceTest {
         // GIVEN
         when(repo.findByUsername(customer1.username())).thenReturn(Optional.of(customer1));
         // WHEN & THEN
-        assertThrows(UsernameExistsException.class, () -> {
-            service.addCustomer(customer1);
-        });
+        assertThrows(UsernameExistsException.class, () -> service.addCustomer(customer1));
         verify(repo).findByUsername(customer1.username());
         // never means not called
         verify(repo, never()).save(any(Customer.class));
@@ -130,9 +128,7 @@ class CustomerServiceTest {
         String username = customer1.username();
         when(repo.findByUsername(username)).thenReturn(Optional.empty());
         // WHEN & THEN
-        assertThrows(CustomerNotFoundException.class, () -> {
-            service.updateCustomer(username, customer1);
-        });
+        assertThrows(CustomerNotFoundException.class, () -> service.updateCustomer(username, customer1));
         verify(repo).findByUsername(username);
         verify(repo, never()).save(any(Customer.class));
     }
@@ -155,9 +151,7 @@ class CustomerServiceTest {
         String username = customer1.username();
         when(repo.findByUsername(username)).thenReturn(Optional.empty());
         // WHEN & THEN
-        assertThrows(CustomerNotFoundException.class, () -> {
-            service.deleteCustomer(username);
-        });
+        assertThrows(CustomerNotFoundException.class, () -> service.deleteCustomer(username));
         verify(repo).findByUsername(username);
         verify(repo, never()).deleteByUsername(username);
     }

@@ -1,9 +1,10 @@
 import {useEffect, useState} from 'react'
 import './App.css'
 import axios from 'axios';
+import {AppUser} from "./types.ts";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
 
   function login() {
     // window.location.host is whats after www. and the port
@@ -25,8 +26,11 @@ function App() {
 
   function getMe() {
     axios.get("/api/auth/me")
-        .then(() => setIsLoggedIn(true))
-        .catch(e => console.error(e))
+        .then((r) => setAppUser(r.data))
+        .catch(e => {
+          setAppUser(null);
+          console.error(e);
+        })
   }
 
   useEffect(getMe, []);
@@ -34,7 +38,7 @@ function App() {
 
     return (
     <>
-    {isLoggedIn ? <button onClick={logout}>Logout</button>
+    {appUser ? <button onClick={logout}>Logout</button>
         : <button onClick={login}>Login with Github</button>
     }
     </>
