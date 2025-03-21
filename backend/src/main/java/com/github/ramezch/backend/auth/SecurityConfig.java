@@ -24,7 +24,6 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a -> a
-                        //White-Listing wird bevorzugt in den meisten Projekten
                         .requestMatchers("/api/auth/me").permitAll()
                         .requestMatchers("/api/customers/**").hasRole(AppUserRoles.USER.toString())
                         .anyRequest().authenticated()

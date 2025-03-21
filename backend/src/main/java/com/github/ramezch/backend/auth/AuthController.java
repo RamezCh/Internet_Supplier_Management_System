@@ -13,10 +13,9 @@ public class AuthController {
 
     @GetMapping("/me")
     public AppUser getMe(@AuthenticationPrincipal OAuth2User oAuth2User) {
-        if(oAuth2User instanceof AppUser appUser) {
+        if (oAuth2User instanceof AppUser appUser) {
             return appUser;
         }
         return null;
     }
-
 }
