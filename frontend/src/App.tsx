@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react'
 import './App.css'
 import axios from 'axios';
 import {AppUser} from "./types.ts";
+import {WelcomePage} from "./pages/WelcomePage.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -39,7 +40,7 @@ function App() {
     return (
     <>
     {appUser ? <button onClick={logout}>Logout</button>
-        : <button onClick={login}>Login with Github</button>
+        : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>
     }
     </>
   )
