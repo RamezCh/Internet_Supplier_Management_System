@@ -3,6 +3,8 @@ import './App.css'
 import axios from 'axios';
 import {AppUser} from "./types.ts";
 import {WelcomePage} from "./pages/WelcomePage.tsx";
+import {Route, Routes} from "react-router-dom";
+import ProtectedRoutes from "./shared/ProtectedRoutes.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -38,11 +40,12 @@ function App() {
 
 
     return (
-    <>
-    {appUser ? <button onClick={logout}>Logout</button>
-        : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>
-    }
-    </>
+    <Routes>
+      <Route path="/" element={appUser ? <button onClick={logout}>Logout</button> : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>} />
+      <Route element={<ProtectedRoutes appUser={appUser} />}>
+        <Route path="/logout" element={<button onClick={logout}>Logout</button>} />
+      </Route>
+    </Routes>
   )
 }
 
