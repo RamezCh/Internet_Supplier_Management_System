@@ -5,6 +5,7 @@ import {AppUser} from "./types.ts";
 import {WelcomePage} from "./pages/WelcomePage.tsx";
 import {Route, Routes} from "react-router-dom";
 import ProtectedRoutes from "./shared/ProtectedRoutes.tsx";
+import {Navbar} from "./shared/Navbar.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -41,9 +42,8 @@ function App() {
 
     return (
     <Routes>
-      <Route path="/" element={appUser ? <button onClick={logout}>Logout</button> : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>} />
+      <Route path="/" element={appUser ? <Navbar handleLogout={logout}/> : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>} />
       <Route element={<ProtectedRoutes appUser={appUser} />}>
-        <Route path="/logout" element={<button onClick={logout}>Logout</button>} />
       </Route>
     </Routes>
   )
