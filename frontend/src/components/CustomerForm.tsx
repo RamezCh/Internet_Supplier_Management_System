@@ -1,7 +1,7 @@
 import { Input } from "../shared/Input.tsx";
 import { Textarea } from "../shared/Textarea.tsx";
 import { Customer } from "../types.ts";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useEffect } from "react";
 import { Button } from "../shared/Button.tsx";
 
 interface CustomerFormProps {
@@ -13,6 +13,7 @@ interface CustomerFormProps {
     resetButtonText: string;
     mode: 'add' | 'edit';
     loading?: boolean;
+    submissionError?: Partial<Customer>; // New prop for submission errors
 }
 
 export const CustomerForm = ({
@@ -24,6 +25,7 @@ export const CustomerForm = ({
                                  resetButtonText,
                                  mode,
                                  loading = false,
+                                 submissionError, // Destructure new prop
                              }: CustomerFormProps) => {
     const [customer, setCustomer] = useState<Customer>(initialData || {
         username: "",
@@ -31,6 +33,13 @@ export const CustomerForm = ({
         notes: ""
     });
     const [errors, setErrors] = useState<Partial<Customer>>({});
+
+    // Sync submission errors with form errors
+    useEffect(() => {
+        if (submissionError) {
+            setErrors(prev => ({ ...prev, ...submissionError }));
+        }
+    }, [submissionError]);
 
     const handleOnChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
