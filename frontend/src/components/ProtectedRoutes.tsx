@@ -1,5 +1,5 @@
 import {Navigate, Outlet} from "react-router-dom";
-import {AppUser} from "../types";
+import {AppUser} from "../types.ts";
 
 type Props = {
     appUser: AppUser | undefined | null
