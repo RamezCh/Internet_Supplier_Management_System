@@ -5,7 +5,7 @@ import {AppUser} from "./types.ts";
 import {WelcomePage} from "./pages/WelcomePage.tsx";
 import {Route, Routes} from "react-router-dom";
 import ProtectedRoutes from "./shared/ProtectedRoutes.tsx";
-import {Navbar} from "./shared/Navbar.tsx";
+import { Navbar } from "./shared/Navbar.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -23,11 +23,6 @@ function App() {
     window.open(host + '/oauth2/authorization/github', '_self')
   }
 
-  function logout() {
-    const host = window.location.host === 'localhost:5173' ? 'http://localhost:8080' : window.location.origin
-    window.open(host + '/logout', '_self')
-  }
-
   function getMe() {
     axios.get("/api/auth/me")
         .then((r) => setAppUser(r.data))
@@ -42,7 +37,7 @@ function App() {
 
     return (
     <Routes>
-      <Route path="/" element={appUser ? <Navbar handleLogout={logout}/> : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>} />
+      <Route path="/" element={appUser ? <Navbar/> : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>} />
       <Route element={<ProtectedRoutes appUser={appUser} />}>
       </Route>
     </Routes>
