@@ -8,6 +8,7 @@ import { Navbar } from "./components/Navbar.tsx";
 import {Customers} from "./pages/Customers.tsx";
 import {AddCustomer} from "./pages/AddCustomer.tsx";
 import {ToastContainer} from "react-toastify";
+import {EditCustomer} from "./pages/EditCustomer.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -32,6 +33,7 @@ function App() {
           <Route path="/" element={appUser ? <Customers/> : <WelcomePage/>} />
           <Route element={<ProtectedRoutes appUser={appUser} />}>
             <Route path="/customer/add" element={<AddCustomer/>} />
+            <Route path="/customer/:username/edit" element={<EditCustomer/>} />
           </Route>
         </Routes>
         <ToastContainer position="top-center" autoClose={3000} />

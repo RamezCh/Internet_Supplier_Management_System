@@ -1,13 +1,19 @@
 import { Customer } from "../types";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import {useNavigate} from "react-router-dom";
 
 interface CustomerCardProps {
     customer: Customer;
-    onEdit: (customer: Customer) => void;
-    onDelete: (customerId: string) => void;
+    onDelete: (username:string) => void;
 }
 
-export const CustomerCard = ({ customer, onEdit, onDelete }: CustomerCardProps) => {
+export const CustomerCard = ({ customer, onDelete }: CustomerCardProps) => {
+    const navigate = useNavigate();
+
+    const handleEdit = () => {
+        navigate(`/customer/${customer.username}/edit`);
+    }
+
     return (
         <div className="flex justify-between items-center w-full p-4 border border-gray-200 rounded-lg mb-3 bg-white shadow-sm hover:shadow-md transition-shadow">
             <div className="flex gap-6 flex-grow flex-wrap">
@@ -22,7 +28,7 @@ export const CustomerCard = ({ customer, onEdit, onDelete }: CustomerCardProps) 
             </div>
             <div className="flex gap-3">
                 <button
-                    onClick={() => onEdit(customer)}
+                    onClick={handleEdit}
                     className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors"
                     aria-label="Edit customer"
                 >
