@@ -5,3 +5,9 @@ export type AppUser = {
     todoIds: string[],
     role: "ADMIN" | "USER"
 }
+
+export type Customer = {
+    username: string,
+    fullName: string,
+    notes: string
+}

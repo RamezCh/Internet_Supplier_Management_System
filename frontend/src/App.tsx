@@ -5,6 +5,7 @@ import {WelcomePage} from "./pages/WelcomePage.tsx";
 import {Route, Routes} from "react-router-dom";
 import ProtectedRoutes from "./shared/ProtectedRoutes.tsx";
 import { Navbar } from "./shared/Navbar.tsx";
+import {Customers} from "./pages/Customers.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -38,6 +39,7 @@ function App() {
     <Routes>
       <Route path="/" element={appUser ? <Navbar/> : <WelcomePage onGoogleLogin={login} onGitHubLogin={login}/>} />
       <Route element={<ProtectedRoutes appUser={appUser} />}>
+        <Route path="/customers" element={<Customers/>} />
       </Route>
     </Routes>
   )
