@@ -2,14 +2,15 @@ import {useEffect, useState} from 'react'
 import axios from 'axios';
 import {AppUser} from "./types.ts";
 import {WelcomePage} from "./pages/WelcomePage.tsx";
-import {Route, Routes, useNavigate} from "react-router-dom";
-import ProtectedRoutes from "./shared/ProtectedRoutes.tsx";
-import { Navbar } from "./shared/Navbar.tsx";
+import {Route, Routes} from "react-router-dom";
+import ProtectedRoutes from "./components/ProtectedRoutes.tsx";
+import { Navbar } from "./components/Navbar.tsx";
 import {Customers} from "./pages/Customers.tsx";
+import {AddCustomer} from "./pages/AddCustomer.tsx";
+import {ToastContainer} from "react-toastify";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
-  const navigate = useNavigate();
 
   function getMe() {
     axios.get("/api/auth/me")
@@ -24,21 +25,16 @@ function App() {
     getMe();
   }, []);
 
-  useEffect(() => {
-    if (appUser) {
-      navigate("/customers");
-    }
-  }, [appUser, navigate]);
-
   return (
       <>
         {appUser && <Navbar/>}
         <Routes>
-          <Route path="/" element={<WelcomePage/>} />
+          <Route path="/" element={appUser ? <Customers/> : <WelcomePage/>} />
           <Route element={<ProtectedRoutes appUser={appUser} />}>
-            <Route path="/customers" element={<Customers/>} />
+            <Route path="/customer/add" element={<AddCustomer/>} />
           </Route>
         </Routes>
+        <ToastContainer position="top-center" autoClose={3000} />
       </>
   )
 }

@@ -1,5 +1,5 @@
-import {Button} from "./Button.tsx";
-import {Link} from "./Link.tsx";
+import {Button} from "../shared/Button.tsx";
+import {Link} from "../shared/Link.tsx";
 
 export const Navbar = () => {
 
@@ -10,7 +10,7 @@ export const Navbar = () => {
 
     return <nav className="flex flex-row justify-between w-full p-6 shadow-sm">
         <div>
-            <Link to="/customers">Customers</Link>
+            <Link to="/">Customers</Link>
             <Link to="/customer/add">Add Customer</Link>
         </div>
         <Button variant="red"  handleClick={logout}>
