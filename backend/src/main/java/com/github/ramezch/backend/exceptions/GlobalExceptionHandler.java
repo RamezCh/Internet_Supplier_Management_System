@@ -50,6 +50,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorMessage handleAllExceptions(Exception exception) {
+        // exception.printStackTrace(); shows everything that happened
         logger.severe("Unhandled exception occurred: " + exception.getMessage());
         return new ErrorMessage("An unexpected error occurred. Please try again later.", LocalDateTime.now());
     }
