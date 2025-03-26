@@ -49,7 +49,8 @@ public class CustomerController {
 
     @DeleteMapping("{username}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTask(@PathVariable String username) {
-        customerService.deleteCustomer(username);
+    public void deleteTask(@PathVariable String username, @AuthenticationPrincipal OAuth2User appUser) {
+        String userId = appUser.getName();
+        customerService.deleteCustomer(username, userId);
     }
 }

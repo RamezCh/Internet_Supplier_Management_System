@@ -1,6 +1,5 @@
 package com.github.ramezch.backend.auth;
 
-import com.github.ramezch.backend.appuser.AppUserRoles;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +24,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/api/auth/me").permitAll()
-                        .requestMatchers("/api/customers/**").hasAuthority(AppUserRoles.USER.toString())
+                        // .requestMatchers("/api/customers/**").hasAuthority(AppUserRoles.USER.toString())
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(s ->
