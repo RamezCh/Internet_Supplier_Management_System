@@ -25,7 +25,7 @@ export const CustomerForm = ({
                                  resetButtonText,
                                  mode,
                                  loading = false,
-                                 submissionError, // Destructure new prop
+                                 submissionError,
                              }: CustomerFormProps) => {
     const [customer, setCustomer] = useState<Customer>(initialData || {
         username: "",

@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -19,8 +21,9 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping
-    public Page<Customer> getCustomers(Pageable pageable) {
-        return customerService.getCustomers(pageable);
+    public Page<Customer> getCustomers(Pageable pageable, @AuthenticationPrincipal OAuth2User appUser) {
+        String userId = appUser.getName();
+        return customerService.getCustomers(pageable, userId);
     }
 
     @GetMapping("{username}")
@@ -34,8 +37,9 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Customer addCustomer(@RequestBody @Valid Customer customer) {
-        return customerService.addCustomer(customer);
+    public Customer addCustomer(@RequestBody @Valid Customer customer, @AuthenticationPrincipal OAuth2User appUser) {
+        String userId = appUser.getName();
+        return customerService.addCustomer(customer, userId);
     }
 
     @PutMapping("{username}")

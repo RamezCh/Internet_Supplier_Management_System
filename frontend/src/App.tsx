@@ -29,13 +29,15 @@ function App() {
   return (
       <>
         {appUser && <Navbar/>}
-        <Routes>
-          <Route path="/" element={appUser ? <Customers/> : <WelcomePage/>} />
-          <Route element={<ProtectedRoutes appUser={appUser} />}>
-            <Route path="/customer/add" element={<AddCustomer/>} />
-            <Route path="/customer/:username/edit" element={<EditCustomer/>} />
-          </Route>
-        </Routes>
+          <div className="my-10 mx-7">
+            <Routes>
+              <Route path="/" element={appUser ? <Customers/> : <WelcomePage/>} />
+              <Route element={<ProtectedRoutes appUser={appUser} />}>
+                <Route path="/customer/add" element={<AddCustomer/>} />
+                <Route path="/customer/:username/edit" element={<EditCustomer/>} />
+              </Route>
+            </Routes>
+          </div>
         <ToastContainer position="top-center" autoClose={3000} />
       </>
   )
