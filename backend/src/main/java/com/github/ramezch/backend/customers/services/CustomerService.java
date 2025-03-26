@@ -73,8 +73,20 @@ public class CustomerService {
         return customerRepo.save(customer);
     }
 
-    public void deleteCustomer(String username) {
-        getCustomer(username).orElseThrow(() -> new CustomerNotFoundException(username));
+    public void deleteCustomer(String username, String userId) {
+        // Verify customer exists
+        if (customerRepo.findByUsername(username).isEmpty()) {
+            throw new CustomerNotFoundException(username);
+        }
+
+        // Update user's customer list
+        AppUser appUser = appUserRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        appUser.getCustomerIds().removeIf(id -> id.equals(username));
+        appUserRepository.save(appUser);
+
+        // Delete customer
         customerRepo.deleteByUsername(username);
     }
 }

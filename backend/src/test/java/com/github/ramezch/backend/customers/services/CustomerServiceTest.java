@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -218,12 +219,26 @@ class CustomerServiceTest {
     void deleteCustomer_returnNothing_whenFound() {
         // GIVEN
         String username = customer1.username();
+        List<String> customerIds = new ArrayList<>(List.of(username)); // mutable list
+
+        // Mock user repository
+        AppUser mockUser = new AppUser();
+        mockUser.setCustomerIds(customerIds);
+        when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
+
         when(customerRepo.findByUsername(username)).thenReturn(Optional.of(customer1));
+
         // WHEN
-        service.deleteCustomer(username);
+        service.deleteCustomer(username, userId);
+
         // THEN
         verify(customerRepo).findByUsername(username);
+        verify(appUserRepo).findById(userId);
         verify(customerRepo).deleteByUsername(username);
+
+        // Verify user's customer list was updated
+        assertThat(mockUser.getCustomerIds()).doesNotContain(username);
+        verify(appUserRepo).save(mockUser);
     }
 
     @Test
@@ -231,8 +246,12 @@ class CustomerServiceTest {
         // GIVEN
         String username = customer1.username();
         when(customerRepo.findByUsername(username)).thenReturn(Optional.empty());
+
+        // Mock user repository
+        AppUser mockUser = new AppUser();
+        when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
         // WHEN & THEN
-        assertThrows(CustomerNotFoundException.class, () -> service.deleteCustomer(username));
+        assertThrows(CustomerNotFoundException.class, () -> service.deleteCustomer(username, userId));
         verify(customerRepo).findByUsername(username);
         verify(customerRepo, never()).deleteByUsername(username);
     }
