@@ -79,6 +79,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>internet_supplier_management_system_app</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
