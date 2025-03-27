@@ -23,9 +23,8 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/api/auth/me").permitAll()
-                        .requestMatchers("/").permitAll()
-                        // .requestMatchers("/api/customers/**").hasAuthority(AppUserRoles.USER.toString())
+                        .requestMatchers("/", "/api/auth/**").permitAll()
+                        .requestMatchers("/static/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(s ->
