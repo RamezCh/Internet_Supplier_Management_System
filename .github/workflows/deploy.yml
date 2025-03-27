@@ -82,8 +82,8 @@ jobs:
     needs: push-to-docker-hub
     environment:
       name: Internet Supplier Management System
-      url: https://google.com/
+      url: https://internet-supplier-management-system.onrender.com/
     steps:
       - name: Trigger Render.com Deployment
         run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY }} #muss mit der url des Render Deployments übereinstimmen
+          curl -X POST ${{ secrets.RENDER_DEPLOY }}
