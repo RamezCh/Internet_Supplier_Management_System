@@ -40,7 +40,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '21' # must match the version in the pom.xml
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
@@ -49,8 +49,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: internet_supplier_management_system_app.jar
-          path: backend/target/internet_supplier_management_system_app.jar # must match the finalName in the pom.xml
+          name: app-build
+          path: backend/target/internet_supplier_management_system_app.jar
 
   push-to-docker-hub:
     runs-on: ubuntu-latest
@@ -60,20 +60,20 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: internet_supplier_management_system_app.jar
+          name: app-build
           path: backend/target
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }} # must match the name of the Dockerhub account
-          password: ${{ secrets.DOCKERHUB_PASSWORD }} # must match the password of the Dockerhub account
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_TAG }} # Example: username/project:latest
+          tags: ${{ secrets.DOCKERHUB_TAG }}
           context: .
 
   deploy:
