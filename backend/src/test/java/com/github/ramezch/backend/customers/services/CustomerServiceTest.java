@@ -6,7 +6,7 @@ import com.github.ramezch.backend.customers.models.Customer;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import com.github.ramezch.backend.exceptions.UserNotFoundException;
-import com.github.ramezch.backend.exceptions.UsernameExistsException;
+import com.github.ramezch.backend.exceptions.UsernameTakenException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -163,7 +163,7 @@ class CustomerServiceTest {
                 new Customer("existing_customer", "New Name", "New Desc"),
                 userId
         );
-        assertThrows(UsernameExistsException.class, addCustomer);
+        assertThrows(UsernameTakenException.class, addCustomer);
 
         verify(appUserRepo).findById(userId);
         verify(customerRepo).findAllById(mockUser.getCustomerIds());

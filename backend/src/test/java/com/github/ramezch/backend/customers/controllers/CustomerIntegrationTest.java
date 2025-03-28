@@ -1,10 +1,13 @@
 package com.github.ramezch.backend.customers.controllers;
 
+import com.github.ramezch.backend.address.models.Address;
 import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.appuser.AppUserRepository;
 import com.github.ramezch.backend.appuser.AppUserRoles;
 import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.models.CustomerStatus;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
+import com.github.ramezch.backend.utils.IdService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +37,8 @@ class CustomerIntegrationTest {
     private CustomerRepository repo;
     @Autowired
     private AppUserRepository appUserRepo;
+    @Autowired
+    private IdService idService;
 
     private Customer newCustomer;
 
@@ -42,8 +48,10 @@ class CustomerIntegrationTest {
 
     @BeforeEach
     void setup() {
-        newCustomer = new Customer("new_customer", "New Customer", "test");
-        testUser = new AppUser("123", "test_user", "w.com", List.of("new_customer"), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
+        LocalDate now = LocalDate.now();
+        Address address = new Address(idService.randomId(),"Deutschland", "Berlin", "BeispielStrasse", "10000");
+        newCustomer = new Customer("123","new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
+        testUser = new AppUser("123", "test_user", "w.com", List.of("123"), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
         appUserRepo.save(testUser);
     }
 
@@ -62,8 +70,17 @@ class CustomerIntegrationTest {
                         {
                             "content": [
                                 {
+                                    "id": "123",
                                     "username": "new_customer",
                                     "fullName":  "New Customer",
+                                    "phone": "78863120",
+                                    "address":{
+                                        "country":"Deutschland",
+                                        "city":"Berlin",
+                                        "street":"BeispielStrasse",
+                                        "postalCode":"10000"
+                                    },
+                                    "status":"PENDING_ACTIVATION",
                                     "notes": "test"
                                 }
                             ]
@@ -77,7 +94,7 @@ class CustomerIntegrationTest {
         // GIVEN
         repo.save(newCustomer);
         // WHEN
-        mvc.perform(get(baseURL + "/" + newCustomer.username())
+        mvc.perform(get(baseURL + "/" + newCustomer.id())
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 // THEN
@@ -110,20 +127,36 @@ class CustomerIntegrationTest {
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                {
-                  "username": "new_customer",
-                  "fullName":  "New Customer",
-                  "notes": "test"
-                }
+                                {
+                                    "username": "new_customer",
+                                    "fullName":  "New Customer",
+                                    "phone": "78863120",
+                                    "address":{
+                                        "country":"Deutschland",
+                                        "city":"Berlin",
+                                        "street":"BeispielStrasse",
+                                        "postalCode":"10000"
+                                    },
+                                    "status":"PENDING_ACTIVATION",
+                                    "notes": "test"
+                                }
                 """))
                 // THEN
                 .andExpect(status().isCreated())
                 .andExpect(content().json("""
-                {
-                  "username": "new_customer",
-                  "fullName":  "New Customer",
-                  "notes": "test"
-                }
+                                  { 
+                                    "username": "new_customer",
+                                    "fullName":  "New Customer",
+                                    "phone": "78863120",
+                                    "address":{
+                                        "country":"Deutschland",
+                                        "city":"Berlin",
+                                        "street":"BeispielStrasse",
+                                        "postalCode":"10000"
+                                    },
+                                    "status":"PENDING_ACTIVATION",
+                                    "notes": "test"
+                                }
                 """));
     }
 
@@ -151,24 +184,42 @@ class CustomerIntegrationTest {
         // GIVEN
         repo.save(newCustomer);
         // WHEN
-        mvc.perform(put(baseURL + "/new_customer")
+        mvc.perform(put(baseURL + "/123")
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                        {
-                          "username": "new_customer",
-                          "fullName":  "New Customer",
-                          "notes": "test2"
-                        }
+                                {
+                                    "id": "123",
+                                    "username": "new_customer",
+                                    "fullName":  "New Customer",
+                                    "phone": "78863120",
+                                    "address":{
+                                        "country":"Deutschland",
+                                        "city":"Berlin",
+                                        "street":"BeispielStrasse",
+                                        "postalCode":"10000"
+                                    },
+                                    "status":"PENDING_ACTIVATION",
+                                    "notes": "testing"
+                                }
                         """))
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
-                        {
-                          "username": "new_customer",
-                          "fullName":  "New Customer",
-                          "notes": "test2"
-                        }
+                                {
+                                    "id": "123",
+                                    "username": "new_customer",
+                                    "fullName":  "New Customer",
+                                    "phone": "78863120",
+                                    "address":{
+                                        "country":"Deutschland",
+                                        "city":"Berlin",
+                                        "street":"BeispielStrasse",
+                                        "postalCode":"10000"
+                                    },
+                                    "status":"PENDING_ACTIVATION",
+                                    "notes": "testing"
+                                }
                         """));
 
     }
@@ -181,11 +232,20 @@ class CustomerIntegrationTest {
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                        {
-                          "username": "nonexistent",
-                          "fullName":  "Nonexistent Customer",
-                          "notes": "test"
-                        }
+                                {
+                                    "id": "nonexistent",
+                                    "username": "new_customer",
+                                    "fullName":  "New Customer",
+                                    "phone": "78863120",
+                                    "address":{
+                                        "country":"Deutschland",
+                                        "city":"Berlin",
+                                        "street":"BeispielStrasse",
+                                        "postalCode":"10000"
+                                    },
+                                    "status":"PENDING_ACTIVATION",
+                                    "notes": "test"
+                                }
                         """))
                 // THEN
                 .andExpect(status().isNotFound());
@@ -197,7 +257,7 @@ class CustomerIntegrationTest {
         repo.save(newCustomer);
 
         // WHEN
-        mvc.perform(delete(baseURL+"/new_customer")
+        mvc.perform(delete(baseURL+"/123")
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 // THEN
@@ -245,11 +305,19 @@ class CustomerIntegrationTest {
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                {
-                  "username": "new_customer",
-                  "fullName":  "New Customer",
-                  "notes": "test"
-                }
+                                {
+                                    "username": "new_customer",
+                                    "fullName":  "New Customer",
+                                    "phone": "78863120",
+                                    "address":{
+                                        "country":"Deutschland",
+                                        "city":"Berlin",
+                                        "street":"BeispielStrasse",
+                                        "postalCode":"10000"
+                                    },
+                                    "status":"PENDING_ACTIVATION",
+                                    "notes": "test"
+                                }
                 """))
                 // THEN
                 .andExpect(status().isConflict());

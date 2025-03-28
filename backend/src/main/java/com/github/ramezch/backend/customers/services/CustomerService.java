@@ -3,15 +3,18 @@ package com.github.ramezch.backend.customers.services;
 import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.appuser.AppUserRepository;
 import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.models.CustomerDTO;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
-import com.github.ramezch.backend.exceptions.IdTakenException;
 import com.github.ramezch.backend.exceptions.UserNotFoundException;
+import com.github.ramezch.backend.exceptions.UsernameTakenException;
+import com.github.ramezch.backend.utils.IdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +24,7 @@ import java.util.Optional;
 public class CustomerService {
     private final CustomerRepository customerRepo;
     private final AppUserRepository appUserRepository;
+    private final IdService idService;
 
     public Page<Customer> getCustomers(Pageable pageable, String userId) {
         AppUser appUser = appUserRepository.findById(userId)
@@ -38,20 +42,38 @@ public class CustomerService {
         return customerRepo.findById(id);
     }
 
-    public Customer addCustomer(Customer customer, String userId) {
-        if (customerRepo.existsById(customer.id())) {
-            throw new IdTakenException(customer.id());
-        }
-
+    public Customer addCustomer(CustomerDTO customerDTO, String userId) {
         AppUser appUser = appUserRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        Customer savedCustomer = customerRepo.save(customer);
+        // Check if username already exists among this user's customers
+        if (appUser.getCustomerIds() != null) {
+            boolean usernameExists = customerRepo.findAllById(appUser.getCustomerIds())
+                    .stream()
+                    .anyMatch(c -> c.username().equals(customerDTO.username()));
+
+            if (usernameExists) {
+                throw new UsernameTakenException(customerDTO.username());
+            }
+        }
+
+
+        String newCustomerID;
+        do {
+            newCustomerID = idService.randomId();
+        } while (customerRepo.existsById(newCustomerID));
+
+        LocalDate registrationDate = LocalDate.now();
+
+        Customer newCustomer = new Customer(newCustomerID, customerDTO.username(), customerDTO.fullName(),
+                customerDTO.phone(), customerDTO.address(), registrationDate, customerDTO.status(),  customerDTO.notes());
+
+        Customer savedCustomer = customerRepo.save(newCustomer);
 
         // Initialize customerIds if null and add new ID
         List<String> customerIds = Optional.ofNullable(appUser.getCustomerIds())
                 .orElseGet(ArrayList::new);
-        customerIds.add(savedCustomer.id());
+        customerIds.add(newCustomerID);
         appUser.setCustomerIds(customerIds);
         appUserRepository.save(appUser);
 

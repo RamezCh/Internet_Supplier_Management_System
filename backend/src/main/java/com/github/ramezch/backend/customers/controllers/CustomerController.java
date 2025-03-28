@@ -1,6 +1,7 @@
 package com.github.ramezch.backend.customers.controllers;
 
 import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.models.CustomerDTO;
 import com.github.ramezch.backend.customers.services.CustomerService;
 import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import jakarta.validation.Valid;
@@ -37,9 +38,9 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Customer addCustomer(@RequestBody @Valid Customer customer, @AuthenticationPrincipal OAuth2User appUser) {
+    public Customer addCustomer(@RequestBody @Valid CustomerDTO customerDTO, @AuthenticationPrincipal OAuth2User appUser) {
         String userId = appUser.getName();
-        return customerService.addCustomer(customer, userId);
+        return customerService.addCustomer(customerDTO, userId);
     }
 
     @PutMapping("{id}")
