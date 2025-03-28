@@ -3,18 +3,8 @@ package com.github.ramezch.backend.customers.models;
 import com.github.ramezch.backend.address.models.Address;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.CreatedDate;
 
-import java.time.LocalDate;
-import java.time.Period;
-
-
-public record Customer(
-        @Id
-        @NotBlank(message = "ID cannot be blank")
-        String id,
-
+public record CustomerDTO(
         @NotBlank(message = "Username cannot be blank")
         String username,
 
@@ -28,14 +18,11 @@ public record Customer(
         @NotNull(message = "Address must be provided")
         Address address,
 
-        @CreatedDate
-        @PastOrPresent(message = "Registration date cannot be in the future")
-        LocalDate registrationDate,
-
         @NotNull(message = "Status must be specified")
         CustomerStatus status,
 
         @Nullable
         @Size(max = 500, message = "Notes must be less than 500 characters")
         String notes
-) { }
+) {
+}

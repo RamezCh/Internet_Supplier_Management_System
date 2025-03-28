@@ -1,6 +1,7 @@
 package com.github.ramezch.backend.customers.controllers;
 
 import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.models.CustomerDTO;
 import com.github.ramezch.backend.customers.services.CustomerService;
 import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import jakarta.validation.Valid;
@@ -26,31 +27,31 @@ public class CustomerController {
         return customerService.getCustomers(pageable, userId);
     }
 
-    @GetMapping("{username}")
-    public Customer getCustomer(@PathVariable String username) {
-        Optional<Customer> customer = customerService.getCustomer(username);
+    @GetMapping("{id}")
+    public Customer getCustomer(@PathVariable String id) {
+        Optional<Customer> customer = customerService.getCustomer(id);
         if(customer.isPresent()) {
             return customer.get();
         }
-        throw new CustomerNotFoundException(username);
+        throw new CustomerNotFoundException(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Customer addCustomer(@RequestBody @Valid Customer customer, @AuthenticationPrincipal OAuth2User appUser) {
+    public Customer addCustomer(@RequestBody @Valid CustomerDTO customerDTO, @AuthenticationPrincipal OAuth2User appUser) {
         String userId = appUser.getName();
-        return customerService.addCustomer(customer, userId);
+        return customerService.addCustomer(customerDTO, userId);
     }
 
-    @PutMapping("{username}")
-    public Customer updateCustomer(@PathVariable String username, @RequestBody @Valid Customer customer) {
-        return customerService.updateCustomer(username, customer);
+    @PutMapping("{id}")
+    public Customer updateCustomer(@PathVariable String id, @RequestBody @Valid Customer customer) {
+        return customerService.updateCustomer(id, customer);
     }
 
-    @DeleteMapping("{username}")
+    @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTask(@PathVariable String username, @AuthenticationPrincipal OAuth2User appUser) {
+    public void deleteTask(@PathVariable String id, @AuthenticationPrincipal OAuth2User appUser) {
         String userId = appUser.getName();
-        customerService.deleteCustomer(username, userId);
+        customerService.deleteCustomer(id, userId);
     }
 }

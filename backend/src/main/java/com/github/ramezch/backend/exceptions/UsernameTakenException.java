@@ -1,7 +1,7 @@
 package com.github.ramezch.backend.exceptions;
 
-public class UsernameExistsException extends RuntimeException {
-  public UsernameExistsException(String message) {
+public class UsernameTakenException extends RuntimeException {
+  public UsernameTakenException(String message) {
     super("The Customer with username: '" + message + "' already exists.");
   }
 }
