@@ -31,10 +31,10 @@ public class GlobalExceptionHandler {
     }
 
     // Handle UsernameExistsException
-    @ExceptionHandler(UsernameExistsException.class)
+    @ExceptionHandler(IdTakenException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorMessage handleUsernameExistsException(UsernameExistsException exception) {
-        logger.info("Username already exists: " + exception.getMessage());
+    public ErrorMessage handleUsernameExistsException(IdTakenException exception) {
+        logger.info("Id already exists: " + exception.getMessage());
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 
