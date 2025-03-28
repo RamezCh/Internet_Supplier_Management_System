@@ -41,9 +41,7 @@ class CustomerIntegrationTest {
     private IdService idService;
 
     private Customer newCustomer;
-
     private final String baseURL = "/api/customers";
-
     private AppUser testUser;
 
     @BeforeEach
@@ -72,20 +70,21 @@ class CustomerIntegrationTest {
                                 {
                                     "id": "123",
                                     "username": "new_customer",
-                                    "fullName":  "New Customer",
+                                    "fullName": "New Customer",
                                     "phone": "78863120",
-                                    "address":{
-                                        "country":"Deutschland",
-                                        "city":"Berlin",
-                                        "street":"BeispielStrasse",
-                                        "postalCode":"10000"
+                                    "address": {
+                                        "country": "Deutschland",
+                                        "city": "Berlin",
+                                        "street": "BeispielStrasse",
+                                        "postalCode": "10000"
                                     },
-                                    "status":"PENDING_ACTIVATION",
+                                    "registrationDate": "%s",
+                                    "status": "PENDING_ACTIVATION",
                                     "notes": "test"
                                 }
                             ]
                         }
-                """));
+                """.formatted(LocalDate.now())));
     }
 
     @Test
@@ -101,11 +100,21 @@ class CustomerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                         {
-                        "username": "new_customer",
-                        "fullName":  "New Customer",
-                        "notes": "test"
+                            "id": "123",
+                            "username": "new_customer",
+                            "fullName": "New Customer",
+                            "phone": "78863120",
+                            "address": {
+                                "country": "Deutschland",
+                                "city": "Berlin",
+                                "street": "BeispielStrasse",
+                                "postalCode": "10000"
+                            },
+                            "registrationDate": "%s",
+                            "status": "PENDING_ACTIVATION",
+                            "notes": "test"
                         }
-                """));
+                """.formatted(LocalDate.now())));
     }
 
     @Test
@@ -116,7 +125,12 @@ class CustomerIntegrationTest {
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 // THEN
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().json("""
+                        {
+                            "message": "The Customer with username: 'nonexistent' could not be found."
+                        }
+                """));
     }
 
     @Test
@@ -129,34 +143,34 @@ class CustomerIntegrationTest {
                         .content("""
                                 {
                                     "username": "new_customer",
-                                    "fullName":  "New Customer",
+                                    "fullName": "New Customer",
                                     "phone": "78863120",
-                                    "address":{
-                                        "country":"Deutschland",
-                                        "city":"Berlin",
-                                        "street":"BeispielStrasse",
-                                        "postalCode":"10000"
+                                    "address": {
+                                        "country": "Deutschland",
+                                        "city": "Berlin",
+                                        "street": "BeispielStrasse",
+                                        "postalCode": "10000"
                                     },
-                                    "status":"PENDING_ACTIVATION",
+                                    "status": "PENDING_ACTIVATION",
                                     "notes": "test"
                                 }
                 """))
                 // THEN
                 .andExpect(status().isCreated())
                 .andExpect(content().json("""
-                                  { 
-                                    "username": "new_customer",
-                                    "fullName":  "New Customer",
-                                    "phone": "78863120",
-                                    "address":{
-                                        "country":"Deutschland",
-                                        "city":"Berlin",
-                                        "street":"BeispielStrasse",
-                                        "postalCode":"10000"
-                                    },
-                                    "status":"PENDING_ACTIVATION",
-                                    "notes": "test"
-                                }
+                        {
+                            "username": "new_customer",
+                            "fullName": "New Customer",
+                            "phone": "78863120",
+                            "address": {
+                                "country": "Deutschland",
+                                "city": "Berlin",
+                                "street": "BeispielStrasse",
+                                "postalCode": "10000"
+                            },
+                            "status": "PENDING_ACTIVATION",
+                            "notes": "test"
+                        }
                 """));
     }
 
@@ -168,12 +182,20 @@ class CustomerIntegrationTest {
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                {
-                  "username": "",
-                  "fullName":  "",
-                  "notes": "test"
-                }
-                """))
+                                {
+                                    "username": "",
+                                    "fullName": "",
+                                    "phone": "",
+                                    "address": {
+                                        "country": "",
+                                        "city": "",
+                                        "street": "",
+                                        "postalCode": ""
+                                    },
+                                    "status": "PENDING_ACTIVATION",
+                                    "notes": ""
+                                }
+                        """))
                 // THEN
                 .andExpect(status().isBadRequest());
     }
@@ -190,38 +212,37 @@ class CustomerIntegrationTest {
                         .content("""
                                 {
                                     "id": "123",
-                                    "username": "new_customer",
-                                    "fullName":  "New Customer",
-                                    "phone": "78863120",
-                                    "address":{
-                                        "country":"Deutschland",
-                                        "city":"Berlin",
-                                        "street":"BeispielStrasse",
-                                        "postalCode":"10000"
+                                    "username": "updated_customer",
+                                    "fullName": "Updated Customer",
+                                    "phone": "78863121",
+                                    "address": {
+                                        "country": "Deutschland",
+                                        "city": "Berlin",
+                                        "street": "UpdatedStrasse",
+                                        "postalCode": "10001"
                                     },
-                                    "status":"PENDING_ACTIVATION",
-                                    "notes": "testing"
+                                    "status": "ACTIVE",
+                                    "notes": "updated notes"
                                 }
                         """))
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
-                                {
-                                    "id": "123",
-                                    "username": "new_customer",
-                                    "fullName":  "New Customer",
-                                    "phone": "78863120",
-                                    "address":{
-                                        "country":"Deutschland",
-                                        "city":"Berlin",
-                                        "street":"BeispielStrasse",
-                                        "postalCode":"10000"
-                                    },
-                                    "status":"PENDING_ACTIVATION",
-                                    "notes": "testing"
-                                }
-                        """));
-
+                        {
+                            "id": "123",
+                            "username": "updated_customer",
+                            "fullName": "Updated Customer",
+                            "phone": "78863121",
+                            "address": {
+                                "country": "Deutschland",
+                                "city": "Berlin",
+                                "street": "UpdatedStrasse",
+                                "postalCode": "10001"
+                            },
+                            "status": "ACTIVE",
+                            "notes": "updated notes"
+                        }
+                """));
     }
 
     @Test
@@ -235,29 +256,34 @@ class CustomerIntegrationTest {
                                 {
                                     "id": "nonexistent",
                                     "username": "new_customer",
-                                    "fullName":  "New Customer",
+                                    "fullName": "New Customer",
                                     "phone": "78863120",
-                                    "address":{
-                                        "country":"Deutschland",
-                                        "city":"Berlin",
-                                        "street":"BeispielStrasse",
-                                        "postalCode":"10000"
+                                    "address": {
+                                        "country": "Deutschland",
+                                        "city": "Berlin",
+                                        "street": "BeispielStrasse",
+                                        "postalCode": "10000"
                                     },
-                                    "status":"PENDING_ACTIVATION",
+                                    "status": "PENDING_ACTIVATION",
                                     "notes": "test"
                                 }
                         """))
                 // THEN
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().json("""
+                        {
+                            "message": "The Customer with username: 'nonexistent' could not be found."
+                        }
+                """));
     }
 
     @Test
     @DirtiesContext
     void deleteCustomer_whenExist_returnNoContent() throws Exception {
+        // GIVEN
         repo.save(newCustomer);
-
         // WHEN
-        mvc.perform(delete(baseURL+"/123")
+        mvc.perform(delete(baseURL + "/123")
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 // THEN
@@ -265,18 +291,19 @@ class CustomerIntegrationTest {
     }
 
     @Test
+    @DirtiesContext
     void deleteCustomer_whenNotExist_returnNotFound() throws Exception {
         // WHEN
-        mvc.perform(delete(baseURL+"/new_customer2")
+        mvc.perform(delete(baseURL + "/nonexistent")
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 // THEN
                 .andExpect(status().isNotFound())
                 .andExpect(content().json("""
                         {
-                        "message": "The Customer with username: 'new_customer2' could not be found."
+                            "message": "The Customer with username: 'nonexistent' could not be found."
                         }
-                  """));
+                """));
     }
 
     @Test
@@ -307,19 +334,24 @@ class CustomerIntegrationTest {
                         .content("""
                                 {
                                     "username": "new_customer",
-                                    "fullName":  "New Customer",
+                                    "fullName": "New Customer",
                                     "phone": "78863120",
-                                    "address":{
-                                        "country":"Deutschland",
-                                        "city":"Berlin",
-                                        "street":"BeispielStrasse",
-                                        "postalCode":"10000"
+                                    "address": {
+                                        "country": "Deutschland",
+                                        "city": "Berlin",
+                                        "street": "BeispielStrasse",
+                                        "postalCode": "10000"
                                     },
-                                    "status":"PENDING_ACTIVATION",
+                                    "status": "PENDING_ACTIVATION",
                                     "notes": "test"
                                 }
-                """))
+                        """))
                 // THEN
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(content().json("""
+                        {
+                            "message": "The Customer with username: 'new_customer' already exists."
+                        }
+                """));
     }
 }
