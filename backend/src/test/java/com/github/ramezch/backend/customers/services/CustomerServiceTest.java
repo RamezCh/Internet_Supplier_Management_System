@@ -1,12 +1,16 @@
 package com.github.ramezch.backend.customers.services;
 
+import com.github.ramezch.backend.address.models.Address;
 import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.appuser.AppUserRepository;
 import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.models.CustomerDTO;
+import com.github.ramezch.backend.customers.models.CustomerStatus;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import com.github.ramezch.backend.exceptions.UserNotFoundException;
 import com.github.ramezch.backend.exceptions.UsernameTakenException;
+import com.github.ramezch.backend.utils.IdService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -15,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,24 +31,30 @@ import static org.mockito.Mockito.*;
 class CustomerServiceTest {
     private CustomerRepository customerRepo;
     private AppUserRepository appUserRepo;
+    private IdService idService;
     private CustomerService service;
     private Customer customer1, customer2;
+    private CustomerDTO customerDTO1;
     private String userId;
 
     @BeforeEach
     void setup() {
         customerRepo = mock(CustomerRepository.class);
         appUserRepo = mock(AppUserRepository.class);
-        service = new CustomerService(customerRepo, appUserRepo);
-        customer1 = new Customer("first_customer", "First Customer", "first to pay");
-        customer2 = new Customer("second_customer", "Second Customer", "second to pay");
+        idService = mock(IdService.class);
+        LocalDate now = LocalDate.now();
+        Address address = new Address(idService.randomId(),"Deutschland", "Berlin", "BeispielStrasse", "10000");
+        service = new CustomerService(customerRepo, appUserRepo, idService);
+        customer1 = new Customer("123","new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
+        customer2 = new Customer("234","new_customer2", "New Customer 2", "78863121", address, now, CustomerStatus.PENDING_ACTIVATION, "test2");
+        customerDTO1 = new CustomerDTO("new_customer", "New Customer", "78863120", address, CustomerStatus.PENDING_ACTIVATION, "test");
         userId = "user123";
     }
 
     @Test
     void getCustomers_returnCustomers_whenFound() {
         // GIVEN
-        List<String> customerIds = List.of("first_customer", "second_customer");
+        List<String> customerIds = List.of("123", "234");
         List<Customer> customers = List.of(customer1, customer2);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Customer> expected = new PageImpl<>(customers, pageable, customers.size());
@@ -54,14 +65,14 @@ class CustomerServiceTest {
         when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
 
         // Mock customer repository
-        when(customerRepo.findByUsernameIn(customerIds, pageable)).thenReturn(expected);
+        when(customerRepo.findByIdIn(customerIds, pageable)).thenReturn(expected);
 
         // WHEN
         Page<Customer> actual = service.getCustomers(pageable, userId);
 
         // THEN
         verify(appUserRepo).findById(userId);
-        verify(customerRepo).findByUsernameIn(customerIds, pageable);
+        verify(customerRepo).findByIdIn(customerIds, pageable);
         assertEquals(expected, actual);
     }
 
@@ -78,7 +89,7 @@ class CustomerServiceTest {
         when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
 
         // mock customer repository
-        when(customerRepo.findByUsernameIn(customerIds, pageable)).thenReturn(expected);
+        when(customerRepo.findByIdIn(customerIds, pageable)).thenReturn(expected);
 
         // WHEN
         Page<Customer> actual = service.getCustomers(pageable, userId);
@@ -90,26 +101,26 @@ class CustomerServiceTest {
     @Test
     void getCustomer_returnCustomer_whenFound() {
         // GIVEN
-        String username = "first_customer";
+        String id = "123";
         Optional<Customer> expected = Optional.of(customer1);
         // WHEN
-        when(customerRepo.findByUsername(username)).thenReturn(expected);
-        Optional<Customer> actual = service.getCustomer(username);
+        when(customerRepo.findById(id)).thenReturn(expected);
+        Optional<Customer> actual = service.getCustomer(id);
         // THEN
-        verify(customerRepo).findByUsername(username);
+        verify(customerRepo).findById(id);
         assertEquals(expected, actual);
     }
 
     @Test
     void getCustomer_returnEmpty_whenNotFound() {
         // GIVEN
-        String username = "third_customer";
+        String id = "999";
         Optional<Customer> expected = Optional.empty();
         // WHEN
-        when(customerRepo.findByUsername(username)).thenReturn(expected);
-        Optional<Customer> actual = service.getCustomer(username);
+        when(customerRepo.findById(id)).thenReturn(expected);
+        Optional<Customer> actual = service.getCustomer(id);
         // THEN
-        verify(customerRepo).findByUsername(username);
+        verify(customerRepo).findById(id);
         assertEquals(expected, actual);
     }
 
@@ -121,20 +132,21 @@ class CustomerServiceTest {
 
         when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
         when(customerRepo.findAllById(anyList())).thenReturn(List.of());
-        when(customerRepo.save(customer1)).thenReturn(customer1);
+        when(idService.randomId()).thenReturn("123");
+        when(customerRepo.save(any(Customer.class))).thenReturn(customer1);
         when(appUserRepo.save(any(AppUser.class))).thenReturn(mockUser);
 
         // WHEN
-        Customer actual = service.addCustomer(customer1, userId);
+        Customer actual = service.addCustomer(customerDTO1, userId);
 
         // THEN
         verify(appUserRepo).findById(userId);
         verify(customerRepo).findAllById(mockUser.getCustomerIds());
-        verify(customerRepo).save(customer1);
+        verify(customerRepo).save(any(Customer.class));
         verify(appUserRepo).save(mockUser);
 
-        assertEquals(customer1, actual);
-        assertTrue(mockUser.getCustomerIds().contains(customer1.username()));
+        assertEquals(customer1.username(), actual.username());
+        assertTrue(mockUser.getCustomerIds().contains(actual.id()));
     }
 
     @Test
@@ -143,7 +155,7 @@ class CustomerServiceTest {
         when(appUserRepo.findById(userId)).thenReturn(Optional.empty());
 
         // WHEN & THEN
-        assertThrows(UserNotFoundException.class, () -> service.addCustomer(customer1, userId));
+        assertThrows(UserNotFoundException.class, () -> service.addCustomer(customerDTO1, userId));
         verify(appUserRepo).findById(userId);
         verifyNoInteractions(customerRepo);
     }
@@ -152,17 +164,13 @@ class CustomerServiceTest {
     void addCustomer_shouldThrowException_whenUsernameExists() {
         // GIVEN
         AppUser mockUser = new AppUser();
-        mockUser.setCustomerIds(List.of("existing_customer"));
+        mockUser.setCustomerIds(List.of("123"));
 
-        Customer existingCustomer = new Customer("existing_customer", "Existing", "customer");
         when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(customerRepo.findAllById(mockUser.getCustomerIds())).thenReturn(List.of(existingCustomer));
+        when(customerRepo.findAllById(mockUser.getCustomerIds())).thenReturn(List.of(customer1));
 
         // WHEN & THEN
-        Executable addCustomer = () -> service.addCustomer(
-                new Customer("existing_customer", "New Name", "New Desc"),
-                userId
-        );
+        Executable addCustomer = () -> service.addCustomer(customerDTO1, userId);
         assertThrows(UsernameTakenException.class, addCustomer);
 
         verify(appUserRepo).findById(userId);
@@ -175,84 +183,90 @@ class CustomerServiceTest {
     void addCustomer_shouldInitializeCustomerIdsList_whenNull() {
         // GIVEN
         AppUser mockUser = new AppUser();
-        mockUser.setCustomerIds(null); // null list
+        mockUser.setCustomerIds(null);
 
         when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
         when(customerRepo.findAllById(anyList())).thenReturn(List.of());
-        when(customerRepo.save(customer1)).thenReturn(customer1);
+        when(idService.randomId()).thenReturn("123");
+        when(customerRepo.save(any(Customer.class))).thenReturn(customer1);
         when(appUserRepo.save(any(AppUser.class))).thenReturn(mockUser);
 
         // WHEN
-        service.addCustomer(customer1, userId);
+        Customer actual = service.addCustomer(customerDTO1, userId);
 
         // THEN
         assertNotNull(mockUser.getCustomerIds());
-        assertTrue(mockUser.getCustomerIds().contains(customer1.username()));
+        assertTrue(mockUser.getCustomerIds().contains(actual.id()));
     }
 
     @Test
     void updateCustomer_returnNewCustomer_whenFound() {
         // GIVEN
-        Customer expected = new Customer(customer1.username(), customer1.fullName(), "I like apples");
-        when(customerRepo.findByUsername(expected.username())).thenReturn(Optional.ofNullable(customer1));
-        when(customerRepo.save(expected)).thenReturn(expected);
+        Customer updatedCustomer = new Customer("123", "updated_customer", "Updated Customer", "78863120",
+                customer1.address(), customer1.registrationDate(), CustomerStatus.ACTIVE, "updated notes");
+
+        when(customerRepo.findById("123")).thenReturn(Optional.of(customer1));
+        when(customerRepo.save(updatedCustomer)).thenReturn(updatedCustomer);
+
         // WHEN
-        Customer actual = service.updateCustomer(customer1.username(), expected);
+        Customer actual = service.updateCustomer("123", updatedCustomer);
+
         // THEN
-        assertEquals(expected, actual);
-        verify(customerRepo).findByUsername(expected.username());
-        verify(customerRepo).save(expected);
+        assertEquals(updatedCustomer, actual);
+        verify(customerRepo).findById("123");
+        verify(customerRepo).save(updatedCustomer);
     }
 
     @Test
     void updateCustomer_returnException_whenNotFound() {
         // GIVEN
-        String username = customer1.username();
-        when(customerRepo.findByUsername(username)).thenReturn(Optional.empty());
+        String id = "123";
+        when(customerRepo.findById(id)).thenReturn(Optional.empty());
         // WHEN & THEN
-        assertThrows(CustomerNotFoundException.class, () -> service.updateCustomer(username, customer1));
-        verify(customerRepo).findByUsername(username);
+        assertThrows(CustomerNotFoundException.class, () -> service.updateCustomer(id, customer1));
+        verify(customerRepo).findById(id);
         verify(customerRepo, never()).save(any(Customer.class));
     }
 
     @Test
     void deleteCustomer_returnNothing_whenFound() {
         // GIVEN
-        String username = customer1.username();
-        List<String> customerIds = new ArrayList<>(List.of(username)); // mutable list
+        String id = "123";
+        List<String> customerIds = new ArrayList<>(List.of(id)); // mutable list
 
         // Mock user repository
         AppUser mockUser = new AppUser();
         mockUser.setCustomerIds(customerIds);
         when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
 
-        when(customerRepo.findByUsername(username)).thenReturn(Optional.of(customer1));
+        when(customerRepo.existsById(id)).thenReturn(true);
 
         // WHEN
-        service.deleteCustomer(username, userId);
+        service.deleteCustomer(id, userId);
 
         // THEN
-        verify(customerRepo).findByUsername(username);
+        verify(customerRepo).existsById(id);
         verify(appUserRepo).findById(userId);
-        verify(customerRepo).deleteByUsername(username);
 
         // Verify user's customer list was updated
-        assertThat(mockUser.getCustomerIds()).doesNotContain(username);
+        assertThat(mockUser.getCustomerIds()).doesNotContain(id);
         verify(appUserRepo).save(mockUser);
+        verify(customerRepo).deleteById(id);
     }
 
     @Test
     void deleteCustomer_returnException_whenNotFound() {
         // GIVEN
-        String username = customer1.username();
-        when(customerRepo.findByUsername(username)).thenReturn(Optional.empty());
+        String id = "123";
+        when(customerRepo.existsById(id)).thenReturn(false);
 
         // Mock user repository
         AppUser mockUser = new AppUser();
         when(appUserRepo.findById(userId)).thenReturn(Optional.of(mockUser));
+
         // WHEN & THEN
-        assertThrows(CustomerNotFoundException.class, () -> service.deleteCustomer(username, userId));
-        verify(customerRepo).findByUsername(username);
-        verify(customerRepo, never()).deleteByUsername(username);
+        assertThrows(CustomerNotFoundException.class, () -> service.deleteCustomer(id, userId));
+        verify(customerRepo).existsById(id);
+        verify(customerRepo, never()).deleteById(any());
     }
 }
