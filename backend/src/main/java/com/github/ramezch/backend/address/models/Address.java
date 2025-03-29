@@ -25,38 +25,4 @@ public record Address(
         @Pattern(regexp = "^[a-zA-Z0-9\\-\\s]{3,10}$",
                 message = "Postal code must be 3-10 alphanumeric characters")
         String postalCode
-) {
-    /**
-     * Returns a formatted address string suitable for mailing labels.
-     * Handles optional country field gracefully.
-     */
-    public String toFormattedString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(street).append("\n")
-                .append(city);
-
-        if (postalCode != null && !postalCode.isBlank()) {
-            sb.append("\n").append(postalCode);
-        }
-
-        if (country != null && !country.isBlank()) {
-            sb.append("\n").append(country);
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * German-style inline format:
-     * "Country, Street, City, PostalCode"
-     * Example: "Germany, Alexanderplatz 1, Berlin, 10178"
-     */
-    public String toGermanInlineFormat() {
-        return String.join(", ",
-                country != null ? country : "",
-                street,
-                city,
-                postalCode != null ? postalCode : ""
-        ).replace(", , ", ", ").replaceAll("^, ", "");
-    }
-}
+) {}
