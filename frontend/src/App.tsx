@@ -34,7 +34,7 @@ function App() {
               <Route path="/" element={appUser ? <Customers/> : <WelcomePage/>} />
               <Route element={<ProtectedRoutes appUser={appUser} />}>
                 <Route path="/customer/add" element={<AddCustomer/>} />
-                <Route path="/customer/:username/edit" element={<EditCustomer/>} />
+                <Route path="/customer/:id/edit" element={<EditCustomer/>} />
               </Route>
             </Routes>
           </div>

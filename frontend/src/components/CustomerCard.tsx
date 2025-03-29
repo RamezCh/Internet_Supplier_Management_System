@@ -11,7 +11,7 @@ export const CustomerCard = ({ customer, onDelete }: CustomerCardProps) => {
     const navigate = useNavigate();
 
     const handleEdit = () => {
-        navigate(`/customer/${customer.username}/edit`);
+        navigate(`/customer/${customer.id}/edit`);
     }
 
     return (

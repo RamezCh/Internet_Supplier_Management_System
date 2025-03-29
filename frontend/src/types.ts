@@ -17,11 +17,22 @@ export type CustomerStatus = "ACTIVE" |
     "EXPIRING" | "SUSPENDED" |
     "EXPIRED" | "PENDING_ACTIVATION";
 
-export type Customer = {
+export type CustomerDTO = {
     username: string,
     fullName: string,
     phone: string,
     address: Address,
+    status: CustomerStatus,
+    notes: string
+};
+
+export type Customer = {
+    id: string,
+    username: string,
+    fullName: string,
+    phone: string,
+    address: Address,
+    registrationDate: string,
     status: CustomerStatus,
     notes: string
 };

@@ -1,25 +1,25 @@
 import { Input } from "../shared/Input";
 import { Textarea } from "../shared/Textarea";
 import { Select } from "../shared/Select";
-import { Customer, CustomerStatus } from "../types";
+import {CustomerDTO, CustomerStatus} from "../types";
 import {ChangeEvent, useState, useEffect, FormEvent} from "react";
 import { Button } from "../shared/Button";
 
 interface CustomerFormProps {
-    initialData?: Partial<Customer>;
-    onSubmit: (customer: Customer) => Promise<void>;
+    initialData?: Partial<CustomerDTO>;
+    onSubmit: (customer: CustomerDTO) => Promise<void>;
     onCancel?: () => void;
     isSubmitting: boolean;
     submitButtonText: string;
     resetButtonText: string;
     mode: 'add' | 'edit';
     loading?: boolean;
-    submissionError?: Partial<Record<keyof Omit<Customer, 'address'>, string>> & {
-        address?: Partial<Record<keyof Customer['address'], string>>;
+    submissionError?: Partial<Record<keyof Omit<CustomerDTO, 'address'>, string>> & {
+        address?: Partial<Record<keyof CustomerDTO['address'], string>>;
     };
 }
 
-const defaultCustomer: Customer = {
+const defaultCustomer: CustomerDTO = {
     username: "",
     fullName: "",
     phone: "",
@@ -45,7 +45,7 @@ export const CustomerForm = ({
                                  submissionError,
                              }: CustomerFormProps) => {
 
-    const [customer, setCustomer] = useState<Customer>({
+    const [customer, setCustomer] = useState<CustomerDTO>({
         ...defaultCustomer,
         ...initialData,
         address: {
@@ -83,7 +83,7 @@ export const CustomerForm = ({
             ...prev,
             [name]: value
         }));
-        if (errors?.[name as keyof Customer]) {
+        if (errors?.[name as keyof CustomerDTO]) {
             setErrors(prev => ({ ...prev, [name]: undefined }));
         }
     };
@@ -97,7 +97,7 @@ export const CustomerForm = ({
                 [name]: value
             }
         }));
-        if (errors?.address?.[name as keyof Customer['address']]) {
+        if (errors?.address?.[name as keyof CustomerDTO['address']]) {
             setErrors(prev => ({
                 ...prev,
                 address: {
@@ -125,7 +125,7 @@ export const CustomerForm = ({
         if (!customer.fullName.trim()) newErrors.fullName = "Full name is required";
 
         // Address validation
-        const addressErrors: Partial<Record<keyof Customer['address'], string>> = {};
+        const addressErrors: Partial<Record<keyof CustomerDTO['address'], string>> = {};
         if (!customer.address.street.trim()) addressErrors.street = "Street is required";
         if (!customer.address.city.trim()) addressErrors.city = "City is required";
 
