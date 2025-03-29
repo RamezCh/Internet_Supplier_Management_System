@@ -4,7 +4,7 @@ import {useNavigate} from "react-router-dom";
 
 interface CustomerCardProps {
     customer: Customer;
-    onDelete: (username:string) => void;
+    onDelete: (id:string) => void;
 }
 
 export const CustomerCard = ({ customer, onDelete }: CustomerCardProps) => {
@@ -35,7 +35,7 @@ export const CustomerCard = ({ customer, onDelete }: CustomerCardProps) => {
                     <FaEdit className="w-5 h-5" />
                 </button>
                 <button
-                    onClick={() => onDelete(customer.username)}
+                    onClick={() => onDelete(customer.id)}
                     className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
                     aria-label="Delete customer"
                 >
