@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios, { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { CustomerForm } from "../components/CustomerForm.tsx";
-import { Customer } from "../types.ts";
+import {Customer, CustomerDTO} from "../types.ts";
 import { useNavigate } from "react-router-dom";
 
 export const AddCustomer = () => {
@@ -14,7 +14,7 @@ export const AddCustomer = () => {
     >({});
     const navigate = useNavigate();
 
-    const handleSubmit = async (customer: Customer) => {
+    const handleSubmit = async (customer: CustomerDTO) => {
         setIsSubmitting(true);
         setSubmissionError({});
         try {

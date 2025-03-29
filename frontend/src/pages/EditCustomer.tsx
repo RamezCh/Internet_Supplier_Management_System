@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import { CustomerForm } from "../components/CustomerForm.tsx";
-import { Customer } from "../types.ts";
+import {Customer, CustomerDTO} from "../types.ts";
 
 export const EditCustomer = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,7 +35,7 @@ export const EditCustomer = () => {
         }
     }, [id, navigate]);
 
-    const handleSubmit = async (customer: Customer) => {
+    const handleSubmit = async (customer: CustomerDTO) => {
         setIsSubmitting(true);
         try {
             await axios.put(`/api/customers/${id}`, customer);
