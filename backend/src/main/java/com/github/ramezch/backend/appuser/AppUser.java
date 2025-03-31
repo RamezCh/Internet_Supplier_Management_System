@@ -50,4 +50,14 @@ public class AppUser implements OAuth2User {
     public String getName() {
         return id;
     }
+
+    @JsonIgnore
+    public List<String> getCustomerIds() {
+        return customerIds;
+    }
+
+    @JsonIgnore
+    public void setCustomerIds(List<String> newCustomerIds) {
+        this.customerIds = newCustomerIds;
+    }
 }

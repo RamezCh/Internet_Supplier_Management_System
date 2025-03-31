@@ -38,14 +38,6 @@ public class GlobalExceptionHandler {
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 
-    // Handle UserNotFoundException
-    @ExceptionHandler(UserNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorMessage handleUserNotFoundException(UserNotFoundException exception) {
-        logger.info("AppUser not found: " + exception.getMessage());
-        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
-    }
-
     // Handle all other exceptions
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
