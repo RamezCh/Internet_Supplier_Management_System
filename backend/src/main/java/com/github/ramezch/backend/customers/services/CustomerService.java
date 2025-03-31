@@ -37,7 +37,27 @@ public class CustomerService {
 
     public Page<Customer> searchCustomers(AppUser appUser, CustomerStatus status, String searchTerm, Pageable pageable) {
         List<String> customerIds = appUser.getCustomerIds();
-        return customerRepo.searchCustomers(customerIds, status, searchTerm, pageable);
+        if (customerIds == null || customerIds.isEmpty()) {
+            return Page.empty();
+        }
+
+        // Case 1: No filters - return all customers for these IDs
+        if (status == null && (searchTerm == null || searchTerm.isEmpty())) {
+            return customerRepo.findByIdIn(customerIds, pageable);
+        }
+
+        // Case 2: Only status filter
+        if (status != null && (searchTerm == null || searchTerm.isEmpty())) {
+            return customerRepo.findByIdInAndStatus(customerIds, status, pageable);
+        }
+
+        // Case 3: Full search with both status and search term
+        return customerRepo.searchCustomers(
+                customerIds,
+                status,
+                searchTerm,
+                pageable
+        );
     }
 
     public Optional<Customer> getCustomer(String id, AppUser appUser) {

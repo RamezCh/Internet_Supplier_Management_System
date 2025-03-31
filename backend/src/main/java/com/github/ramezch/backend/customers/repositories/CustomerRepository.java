@@ -19,18 +19,25 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
     Page<Customer> findByIdIn(List<String> ids, Pageable pageable);
 
     @Query("""
+    {
+        $and: [
+            { _id: { $in: ?0 } },
             {
-                $and: [
-                    { _id: { $in: ?0 } },
-                    { $or: [
-                        { ?1 : { status: ?1 } },
-                        { ?2 : { username: { $regex: ?2, $options: 'i' } } },
-                        { ?2 : { fullName: { $regex: ?2, $options: 'i' } } },
-                        { ?2 : { phone: { $regex: ?2, $options: 'i' } } },
-                        { ?2 : { 'address.city': { $regex: ?2, $options: 'i' } } }
-                    ] }
+                $or: [
+                    { $expr: { $eq: [?1, null] } },
+                    { status: ?1 }
+                ]
+            },
+            {
+                $or: [
+                    { username: { $regex: ?2, $options: 'i' } },
+                    { fullName: { $regex: ?2, $options: 'i' } },
+                    { phone: { $regex: ?2, $options: 'i' } },
+                    { 'address.city': { $regex: ?2, $options: 'i' } }
                 ]
             }
+        ]
+    }
     """)
     Page<Customer> searchCustomers(
             List<String> customerIds,
@@ -39,4 +46,6 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
             Pageable pageable);
 
     boolean existsByUsernameAndIdIn(@NotBlank(message = "Username cannot be blank") String username, List<String> customerIds);
+
+    Page<Customer> findByIdInAndStatus(List<String> customerIds, CustomerStatus status, Pageable pageable);
 }

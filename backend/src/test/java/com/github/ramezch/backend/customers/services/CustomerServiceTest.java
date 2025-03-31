@@ -160,4 +160,120 @@ class CustomerServiceTest {
         when(customerRepo.existsById("123")).thenReturn(false);
         assertThrows(CustomerNotFoundException.class, () -> service.deleteCustomer("123", mockUser));
     }
+
+    @Test
+    void searchCustomers_returnFilteredCustomers_whenStatusProvided() {
+        // Given
+        List<String> customerIds = List.of("123", "234");
+        mockUser.setCustomerIds(customerIds);
+        Pageable pageable = PageRequest.of(0, 10);
+        CustomerStatus status = CustomerStatus.PENDING_ACTIVATION;
+        Page<Customer> expected = new PageImpl<>(List.of(customer1, customer2), pageable, 2);
+
+        // Mock the correct repository method that will be called
+        when(customerRepo.findByIdInAndStatus(customerIds, status, pageable))
+                .thenReturn(expected);
+
+        // When
+        Page<Customer> actual = service.searchCustomers(mockUser, status, null, pageable);
+
+        // Then
+        verify(customerRepo).findByIdInAndStatus(customerIds, status, pageable);
+        verify(customerRepo, never()).searchCustomers(any(), any(), any(), any());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void searchCustomers_returnFilteredCustomers_whenSearchTermProvided() {
+        // Given
+        List<String> customerIds = List.of("123", "234");
+        mockUser.setCustomerIds(customerIds);
+        Pageable pageable = PageRequest.of(0, 10);
+        String searchTerm = "customer";
+        Page<Customer> expected = new PageImpl<>(List.of(customer1, customer2), pageable, 2);
+
+        when(customerRepo.searchCustomers(customerIds, null, searchTerm, pageable))
+                .thenReturn(expected);
+
+        // When
+        Page<Customer> actual = service.searchCustomers(mockUser, null, searchTerm, pageable);
+
+        // Then
+        verify(customerRepo).searchCustomers(customerIds, null, searchTerm, pageable);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void searchCustomers_returnFilteredCustomers_whenBothStatusAndSearchTermProvided() {
+        // Given
+        List<String> customerIds = List.of("123", "234");
+        mockUser.setCustomerIds(customerIds);
+        Pageable pageable = PageRequest.of(0, 10);
+        CustomerStatus status = CustomerStatus.PENDING_ACTIVATION;
+        String searchTerm = "customer";
+        Page<Customer> expected = new PageImpl<>(List.of(customer1, customer2), pageable, 2);
+
+        when(customerRepo.searchCustomers(customerIds, status, searchTerm, pageable))
+                .thenReturn(expected);
+
+        // When
+        Page<Customer> actual = service.searchCustomers(mockUser, status, searchTerm, pageable);
+
+        // Then
+        verify(customerRepo).searchCustomers(customerIds, status, searchTerm, pageable);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void searchCustomers_returnEmpty_whenNoMatchesFound() {
+        // Given
+        List<String> customerIds = List.of("123", "234");
+        mockUser.setCustomerIds(customerIds);
+        Pageable pageable = PageRequest.of(0, 10);
+        CustomerStatus status = CustomerStatus.ACTIVE;
+        String searchTerm = "nonexistent";
+
+        when(customerRepo.searchCustomers(customerIds, status, searchTerm, pageable))
+                .thenReturn(Page.empty());
+
+        // When
+        Page<Customer> actual = service.searchCustomers(mockUser, status, searchTerm, pageable);
+
+        // Then
+        assertTrue(actual.isEmpty());
+    }
+
+    @Test
+    void searchCustomers_returnEmpty_whenUserHasNoCustomers() {
+        // Given
+        mockUser.setCustomerIds(List.of());
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // When
+        Page<Customer> actual = service.searchCustomers(mockUser, null, "any", pageable);
+
+        // Then
+        assertTrue(actual.isEmpty());
+        verify(customerRepo, never()).searchCustomers(any(), any(), any(), any());
+    }
+
+    @Test
+    void searchCustomers_usesCaseInsensitiveSearch() {
+        // Given
+        List<String> customerIds = List.of("123", "234");
+        mockUser.setCustomerIds(customerIds);
+        Pageable pageable = PageRequest.of(0, 10);
+        String searchTerm = "CUSTOMER"; // uppercase
+        Page<Customer> expected = new PageImpl<>(List.of(customer1, customer2), pageable, 2);
+
+        when(customerRepo.searchCustomers(customerIds, null, searchTerm, pageable))
+                .thenReturn(expected);
+
+        // When
+        Page<Customer> actual = service.searchCustomers(mockUser, null, searchTerm, pageable);
+
+        // Then
+        verify(customerRepo).searchCustomers(customerIds, null, searchTerm, pageable);
+        assertEquals(expected, actual);
+    }
 }
