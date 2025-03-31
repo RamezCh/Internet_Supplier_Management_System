@@ -1,6 +1,5 @@
 package com.github.ramezch.backend.customers.models;
 
-import com.github.ramezch.backend.address.models.Address;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
 import org.springframework.data.annotation.Id;

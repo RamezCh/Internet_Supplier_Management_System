@@ -1,6 +1,6 @@
 package com.github.ramezch.backend.customers.services;
 
-import com.github.ramezch.backend.address.models.Address;
+import com.github.ramezch.backend.customers.models.Address;
 import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.appuser.AppUserRepository;
 import com.github.ramezch.backend.customers.models.Customer;

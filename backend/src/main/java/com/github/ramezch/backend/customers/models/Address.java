@@ -1,4 +1,4 @@
-package com.github.ramezch.backend.address.models;
+package com.github.ramezch.backend.customers.models;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
