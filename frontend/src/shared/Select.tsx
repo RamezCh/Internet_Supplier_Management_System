@@ -1,25 +1,25 @@
-import { TextareaHTMLAttributes, forwardRef, ChangeEvent } from 'react';
+import { SelectHTMLAttributes, forwardRef, ChangeEvent } from 'react';
 
-type TextareaProps = {
+type SelectProps = {
     label?: string;
-    onChange?: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-    placeholder?: string;
+    onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
+    options: { value: string; label: string }[];
     error?: string;
     containerClassName?: string;
     labelClassName?: string;
-    textareaClassName?: string;
-    value?: string | number | null;  // Added null here
-} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'className' | 'onChange' | 'value'>;
+    selectClassName?: string;
+    value?: string | null;  // Added null here
+} & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className' | 'onChange' | 'value'>;
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     ({
          label,
          onChange,
-         placeholder,
+         options,
          error,
          containerClassName = '',
          labelClassName = '',
-         textareaClassName = '',
+         selectClassName = '',
          id,
          required,
          value = '',  // Default empty string
@@ -36,18 +36,23 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
                         {required && <span className="text-red-500"> *</span>}
                     </label>
                 )}
-                <textarea
+                <select
                     ref={ref}
                     id={id}
-                    className={`w-full px-3 py-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500' : 'focus:ring-blue-500'} focus:border-blue-500 min-h-[100px] ${textareaClassName}`}
+                    className={`w-full px-3 py-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500' : 'focus:ring-blue-500'} focus:border-blue-500 ${selectClassName}`}
                     onChange={onChange}
-                    placeholder={placeholder}
                     aria-invalid={!!error}
                     aria-describedby={error ? `${id}-error` : undefined}
                     required={required}
                     value={value ?? ''}  // Convert null/undefined to empty string
                     {...props}
-                />
+                >
+                    {options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
                 {error && (
                     <p id={`${id}-error`} className="mt-1 text-sm text-red-600">
                         {error}
@@ -58,4 +63,4 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     }
 );
 
-Textarea.displayName = 'Textarea';
+Select.displayName = 'Select';

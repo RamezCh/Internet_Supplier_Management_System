@@ -2,18 +2,19 @@ import { InputHTMLAttributes, forwardRef, ChangeEvent } from 'react';
 
 type InputProps = {
     label?: string;
-    handleOnChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+    onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
     placeholder?: string;
     error?: string;
     containerClassName?: string;
     labelClassName?: string;
     inputClassName?: string;
-} & Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'onChange'>;
+    value?: string | number | null;  // Added null here
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'onChange' | 'value'>;
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
     ({
          label,
-         handleOnChange,
+         onChange,
          placeholder,
          error,
          containerClassName = '',
@@ -21,6 +22,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
          inputClassName = '',
          id,
          required,
+         value = '',  // Default empty string for null/undefined
          ...props
      }, ref) => {
         return (
@@ -38,11 +40,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                     ref={ref}
                     id={id}
                     className={`w-full px-3 py-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500' : 'focus:ring-blue-500'} focus:border-blue-500 ${inputClassName}`}
-                    onChange={handleOnChange}
+                    onChange={onChange}
                     placeholder={placeholder}
                     aria-invalid={!!error}
                     aria-describedby={error ? `${id}-error` : undefined}
                     required={required}
+                    value={value ?? ''}  // Convert null/undefined to empty string
                     {...props}
                 />
                 {error && (

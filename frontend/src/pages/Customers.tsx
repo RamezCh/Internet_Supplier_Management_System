@@ -18,9 +18,9 @@ export const Customers = () => {
         }
     }
 
-    const handleDelete = async (username: string) => {
+    const handleDelete = async (id: string) => {
         try {
-            await axios.delete("/api/customers/" + username);
+            await axios.delete("/api/customers/" + id);
             toast.success("Customer deleted successfully");
             await getCustomers();
         } catch (error) {
