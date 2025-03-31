@@ -19,13 +19,13 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -49,7 +49,7 @@ class CustomerIntegrationTest {
         LocalDate now = LocalDate.now();
         Address address = new Address(idService.randomId(),"Deutschland", "Berlin", "BeispielStrasse", "10000");
         newCustomer = new Customer("123","new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
-        testUser = new AppUser("123", "test_user", "w.com", List.of("123"), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
+        testUser = new AppUser("123", "test_user", "w.com", new ArrayList<>(List.of("123")), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
         appUserRepo.save(testUser);
     }
 
@@ -353,5 +353,239 @@ class CustomerIntegrationTest {
                             "message": "The Customer with username: 'new_customer' already exists."
                         }
                 """));
+    }
+
+    @Test
+    @DirtiesContext
+    void searchCustomers_withStatusOnly_returnsFilteredCustomers() throws Exception {
+        // GIVEN
+        Customer activeCustomer = new Customer("active123", "active_user", "Active User", "12345678",
+                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "active notes");
+        repo.saveAll(List.of(newCustomer, activeCustomer));
+        testUser.setCustomerIds(List.of("123", "active123"));
+
+        // WHEN
+        mvc.perform(get(baseURL + "/search")
+                .param("status", "PENDING_ACTIVATION")
+                .with(oauth2Login().oauth2User(testUser)))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                    {
+                        "content": [
+                            {
+                                "id": "123",
+                                "username": "new_customer",
+                                "fullName": "New Customer",
+                                "status": "PENDING_ACTIVATION"
+                            }
+                        ],
+                        "totalElements": 1
+                    }
+            """));
+    }
+
+    @Test
+    @DirtiesContext
+    void searchCustomers_withSearchTermOnly_returnsMatchingCustomers() throws Exception {
+        // GIVEN
+        Customer usernameMatch = new Customer("124326", "hamburg_user", "User", "87654321",
+                new Address(idService.randomId(), "Deutschland", "Hamburg", "OtherStreet", "10115"),
+                LocalDate.now(), CustomerStatus.ACTIVE, "notes");
+        Customer fullNameMatch = new Customer("987654", "dsfgh", "Hamburg User", "87654321",
+                new Address(idService.randomId(), "Deutschland", "dfgh", "OtherStreet", "10115"),
+                LocalDate.now(), CustomerStatus.ACTIVE, "notes");
+        Customer cityMatch = new Customer("34567865", "dsfghj", "CDUser", "87654321",
+                new Address(idService.randomId(), "Deutschland", "Hamburg", "OtherStreet", "10115"),
+                LocalDate.now(), CustomerStatus.ACTIVE, "notes");
+
+        repo.saveAll(List.of(usernameMatch, fullNameMatch, cityMatch));
+        testUser.setCustomerIds(List.of(usernameMatch.id(), fullNameMatch.id(), cityMatch.id()));
+
+        // WHEN
+        mvc.perform(get(baseURL + "/search")
+                        .param("searchTerm", "Hamburg")
+                        .with(oauth2Login().oauth2User(testUser)))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                {
+                    "content": [
+                        {
+                            "id": "124326",
+                            "username": "hamburg_user",
+                            "fullName": "User",
+                            "address": {
+                                "city": "Hamburg"
+                            }
+                        },
+                        {
+                            "id": "987654",
+                            "username": "dsfgh",
+                            "fullName": "Hamburg User",
+                            "address": {
+                                "city": "dfgh"
+                            }
+                        },
+                        {
+                            "id": "34567865",
+                            "username": "dsfghj",
+                            "fullName": "CDUser",
+                            "address": {
+                                "city": "Hamburg"
+                            }
+                        }
+                    ],
+                    "totalElements": 3
+                }
+            """));
+    }
+
+    @Test
+    @DirtiesContext
+    void searchCustomers_withStatusAndSearchTerm_returnsMatchingCustomers() throws Exception {
+        // GIVEN
+        Customer pendingBerlinCustomer = new Customer("pendingBerlin", "pending_berlin", "Pending Berlin", "11111111",
+                new Address(idService.randomId(), "Deutschland", "Berlin", "PendingStrasse", "10115"),
+                LocalDate.now(), CustomerStatus.PENDING_ACTIVATION, "pending berlin");
+        repo.saveAll(List.of(newCustomer, pendingBerlinCustomer));
+        testUser.setCustomerIds(List.of("123", "pendingBerlin"));
+
+        // WHEN
+        mvc.perform(get(baseURL + "/search")
+                        .param("status", "PENDING_ACTIVATION")
+                        .param("searchTerm", "Berlin")
+                        .with(oauth2Login().oauth2User(testUser)))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                    {
+                        "content":
+                        [{
+                            "id":"123",
+                            "username":"new_customer",
+                            "fullName":"New Customer",
+                            "phone":"78863120",
+                            "address":{
+                                "country":"Deutschland",
+                                "city":"Berlin",
+                                "street":"BeispielStrasse",
+                                "postalCode":"10000"
+                            },
+                            "status":"PENDING_ACTIVATION",
+                            "notes":"test"
+                            },
+                            {
+                            "id":"pendingBerlin",
+                            "username":"pending_berlin",
+                            "fullName":"Pending Berlin",
+                            "phone":"11111111",
+                            "address":{
+                                "country":"Deutschland",
+                                "city":"Berlin",
+                                "street":"PendingStrasse",
+                                "postalCode":"10115"
+                            },
+                            "status":"PENDING_ACTIVATION",
+                            "notes":"pending berlin"
+                        }],
+                        "totalElements":2,
+                        "totalPages":1
+                    }
+            """));
+    }
+
+    @Test
+    @DirtiesContext
+    void searchCustomers_withNoParams_returnsAllCustomers() throws Exception {
+        // GIVEN
+        Customer anotherCustomer = new Customer("another123", "another_user", "Another User", "22222222",
+                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "another notes");
+        repo.saveAll(List.of(newCustomer, anotherCustomer));
+        testUser.setCustomerIds(List.of("123", "another123"));
+
+        // WHEN
+        mvc.perform(get(baseURL + "/search")
+                        .with(oauth2Login().oauth2User(testUser))
+                        .contentType(MediaType.APPLICATION_JSON))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].username").value("new_customer"))
+                .andExpect(jsonPath("$.content[1].username").value("another_user"));
+    }
+
+    @Test
+    @DirtiesContext
+    void searchCustomers_withNoMatchingResults_returnsEmptyPage() throws Exception {
+        // GIVEN
+        repo.save(newCustomer);
+        testUser.setCustomerIds(List.of("123"));
+
+        // WHEN
+        mvc.perform(get(baseURL + "/search")
+                        .param("searchTerm", "nonexistent")
+                        .with(oauth2Login().oauth2User(testUser)))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                    {
+                        "content": [],
+                        "totalElements": 0
+                    }
+            """));
+    }
+
+    @Test
+    @DirtiesContext
+    void searchCustomers_withEmptyCustomerIds_returnsEmptyPage() throws Exception {
+        // GIVEN
+        repo.save(newCustomer);
+        testUser.setCustomerIds(List.of());
+
+        // WHEN
+        mvc.perform(get(baseURL + "/search")
+                        .with(oauth2Login().oauth2User(testUser)))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                    {
+                        "content": [],
+                        "totalElements": 0
+                    }
+            """));
+    }
+
+    @Test
+    @DirtiesContext
+    void searchCustomers_withPagination_returnsCorrectPage() throws Exception {
+        // GIVEN
+        Customer customer2 = new Customer("234", "customer2", "Customer Two", "22222222",
+                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "notes2");
+        Customer customer3 = new Customer("345", "customer3", "Customer Three", "33333333",
+                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "notes3");
+        repo.saveAll(List.of(newCustomer, customer2, customer3));
+        testUser.setCustomerIds(List.of("123", "234", "345"));
+
+        // WHEN - Request second page with 1 item per page
+        mvc.perform(get(baseURL + "/search")
+                        .param("page", "1")
+                        .param("size", "1")
+                        .with(oauth2Login().oauth2User(testUser)))
+                // THEN
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                    {
+                        "content": [
+                            {
+                                "id": "234",
+                                "username": "customer2"
+                            }
+                        ],
+                        "totalElements": 3,
+                        "number": 1,
+                        "size": 1
+                    }
+            """));
     }
 }
