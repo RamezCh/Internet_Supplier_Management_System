@@ -123,6 +123,7 @@ export const CustomerForm = ({
 
         if (!customer.username.trim()) newErrors.username = "Username is required";
         if (!customer.fullName.trim()) newErrors.fullName = "Full name is required";
+        if (!customer.phone.trim()) newErrors.phone = "Phone Number is required";
 
         // Address validation
         const addressErrors: Partial<Record<keyof CustomerDTO['address'], string>> = {};
@@ -181,6 +182,7 @@ export const CustomerForm = ({
                     value={customer.phone || ""}
                     onChange={handleOnChange}
                     error={errors?.phone}
+                    required
                     placeholder="Enter phone number (e.g., +1 555-123-4567)"
                 />
                 <Select
