@@ -36,3 +36,18 @@ export type Customer = {
     status: CustomerStatus,
     notes: string
 };
+
+export type Option = {
+    value: string;
+    label: string;
+    disabled?: boolean;
+};
+
+export type RadioGroupProps = {
+    options: Option[];
+    name: string;
+    selectedValue?: string;
+    onChange: (value: string) => void;
+    orientation?: 'horizontal' | 'vertical';
+    className?: string;
+};
