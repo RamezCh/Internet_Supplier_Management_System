@@ -6,14 +6,13 @@ export const RadioButton: FC<RadioGroupProps> = ({
                                                     name,
                                                     selectedValue,
                                                     onChange,
-                                                    orientation = 'vertical',
                                                     className = '',
                                                 }) => {
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         onChange(e.target.value);
     };
 
-    const groupClasses = `flex gap-4 ${orientation === 'horizontal' ? 'flex-row' : 'flex-col'} ${className}`;
+    const groupClasses = `flex gap-4 flex-col md:flex-row '} ${className}`;
 
     return (
         <div className={groupClasses}>

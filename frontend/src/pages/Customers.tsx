@@ -2,7 +2,7 @@ import { KeyboardEvent, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaColumns } from "react-icons/fa";
 
 import { Customer } from "../types.ts";
 import { CustomerCard } from "../components/CustomerCard.tsx";
@@ -22,6 +22,16 @@ interface ApiResponse {
     last: boolean;
 }
 
+interface ColumnVisibility {
+    username: boolean;
+    fullName: boolean;
+    phone: boolean;
+    address: boolean;
+    status: boolean;
+    registrationDate: boolean;
+    notes: boolean;
+}
+
 export const Customers = () => {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -30,6 +40,16 @@ export const Customers = () => {
     const [currentPage, setCurrentPage] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(5);
     const [totalPages, setTotalPages] = useState<number>(1);
+    const [showColumnMenu, setShowColumnMenu] = useState<boolean>(false);
+    const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
+        username: true,
+        fullName: true,
+        phone: true,
+        address: true,
+        status: true,
+        registrationDate: true,
+        notes: true,
+    });
 
     const statusOptions = [
         { value: "", label: "All" },
@@ -82,6 +102,7 @@ export const Customers = () => {
             );
             setCustomers(response.data.content);
             setCurrentPage(page);
+            setTotalPages(response.data.totalPages);
         } catch (error) {
             console.error("Error searching customers:", error);
             toast.error("Failed to load customers");
@@ -93,7 +114,7 @@ export const Customers = () => {
     const resetFilters = () => {
         setSearchQuery("");
         setStatus("");
-        searchCustomers(0);
+        getCustomers(0);
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -107,7 +128,7 @@ export const Customers = () => {
         try {
             await axios.delete(`/api/customers/${id}`);
             toast.success("Customer deleted successfully");
-            searchCustomers(currentPage);
+            await searchCustomers(currentPage);
         } catch (error) {
             console.error("Error deleting customer:", error);
             toast.error("Failed to delete customer");
@@ -132,61 +153,110 @@ export const Customers = () => {
         }
     };
 
-    // Initial load
+    const toggleColumnVisibility = (column: keyof ColumnVisibility) => {
+        if (column === 'username' || column === 'fullName') return;
+
+        setColumnVisibility(prev => ({
+            ...prev,
+            [column]: !prev[column]
+        }));
+    };
+
     useEffect(() => {
         getCustomers();
     }, []);
 
     return (
         <div className="flex flex-col gap-4 p-4 max-w-full">
-            <div className="flex flex-row items-center mb-5 gap-4 w-full">
+            <div className="flex flex-col sm:flex-row items-center mb-5 gap-4 w-full">
                 <Input
                     label="Search Bar"
                     placeholder="Search by username, name, city, phone number..."
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     onKeyDown={handleKeyDown}
-                    containerClassName="flex-grow mb-0"
+                    containerClassName="flex-grow w-full sm:w-auto mb-0"
                 />
                 <Button
                     onClick={() => searchCustomers(0)}
-                    className="h-[42px]"
+                    className="h-[42px] w-full sm:w-auto"
                     disabled={isLoading}
                 >
                     {isLoading ? "Searching..." : "Search"}
                 </Button>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-center mb-5 gap-4 w-full">
-                <RadioButton
-                    name="customerStatus"
-                    options={statusOptions}
-                    selectedValue={status}
-                    onChange={setStatus}
-                    orientation="horizontal"
-                    className="p-4 border rounded-lg"
-                />
-                <Button
-                    onClick={resetFilters}
-                    className="h-[42px] bg-gray-200 hover:bg-gray-300 text-gray-800"
-                    disabled={isLoading || (!searchQuery && !status)}
-                >
-                    Reset
-                </Button>
-
-                <div className="ml-auto flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Items per page:</span>
-                    <select
-                        value={pageSize}
-                        onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                        className="border rounded-md p-1 text-sm"
+            <div className="flex flex-col lg:flex-row items-center justify-between mb-5 gap-4 w-full">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                    <RadioButton
+                        name="customerStatus"
+                        options={statusOptions}
+                        selectedValue={status}
+                        onChange={setStatus}
+                        orientation="horizontal"
+                        className="p-4 border rounded-lg w-full sm:w-auto"
+                    />
+                    <Button
+                        onClick={resetFilters}
+                        variant="red"
+                        disabled={isLoading || (!searchQuery && !status)}
+                        className="w-full sm:w-auto"
                     >
-                        {pageSizeOptions.map((size) => (
-                            <option key={size} value={size}>
-                                {size}
-                            </option>
-                        ))}
-                    </select>
+                        Reset
+                    </Button>
+                </div>
+
+                <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-normal">
+                    <div className="relative w-full sm:w-auto">
+                        <Button
+                            onClick={() => setShowColumnMenu(!showColumnMenu)}
+                            variant="secondary"
+                            className="h-[42px] flex items-center gap-2 w-full sm:w-auto"
+                        >
+                            <FaColumns /> Columns
+                        </Button>
+
+                        {showColumnMenu && (
+                            <div className="absolute right-0 mt-2 w-full sm:w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                <div className="p-2">
+                                    <div className="flex items-center gap-2 p-1 opacity-50 cursor-not-allowed">
+                                        <input type="checkbox" checked disabled className="rounded text-blue-600" />
+                                        <span>Username</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 p-1 opacity-50 cursor-not-allowed">
+                                        <input type="checkbox" checked disabled className="rounded text-blue-600" />
+                                        <span>Full Name</span>
+                                    </div>
+                                    {Object.entries(columnVisibility)
+                                        .filter(([key]) => key !== 'username' && key !== 'fullName')
+                                        .map(([key, visible]) => (
+                                            <label key={key} className="flex items-center gap-2 p-1 hover:bg-gray-100 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={visible}
+                                                    onChange={() => toggleColumnVisibility(key as keyof ColumnVisibility)}
+                                                    className="rounded text-blue-600"
+                                                />
+                                                <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                            </label>
+                                        ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <span className="text-sm text-gray-600">Items per page:</span>
+                        <select
+                            value={pageSize}
+                            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                            className="border rounded-md p-1 text-sm w-full sm:w-auto"
+                        >
+                            {pageSizeOptions.map((size) => (
+                                <option key={size} value={size}>{size}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -203,6 +273,7 @@ export const Customers = () => {
                                     key={customer.username}
                                     customer={customer}
                                     onDelete={handleDelete}
+                                    columnVisibility={columnVisibility}
                                 />
                             ))
                         ) : (
@@ -223,8 +294,8 @@ export const Customers = () => {
                             </button>
 
                             <span className="flex items-center">
-                Page {currentPage + 1}
-              </span>
+                                Page {currentPage + 1} of {totalPages}
+                            </span>
 
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
