@@ -29,6 +29,18 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
         return parts.join(', ');
     };
 
+    const getStatusStyles = (status: string) => {
+        switch (status) {
+            case 'ACTIVE':
+                return 'bg-green-100 text-green-800';
+            case 'EXPIRED':
+            case 'SUSPENDED':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-yellow-100 text-yellow-800';
+        }
+    };
+
     return (
         <div className="flex justify-between items-start w-full p-4 border border-gray-200 rounded-lg mb-3 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex flex-wrap gap-6 flex-grow">
@@ -61,14 +73,8 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
                 {columnVisibility.status && (
                     <div className="flex gap-2 items-center min-w-[200px]">
                         <span className="font-medium text-gray-600">Status:</span>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                            customer.status === 'ACTIVE'
-                                ? 'bg-green-100 text-green-800'
-                                : customer.status === 'EXPIRED' || customer.status === 'SUSPENDED'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                            {customer.status || '-'}
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusStyles(customer.status)}`}>
+                        {customer.status || '-'}
                         </span>
                     </div>
                 )}
