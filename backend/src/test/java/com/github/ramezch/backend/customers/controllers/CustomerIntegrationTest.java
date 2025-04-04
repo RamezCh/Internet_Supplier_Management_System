@@ -49,7 +49,7 @@ class CustomerIntegrationTest {
         LocalDate now = LocalDate.now();
         Address address = new Address(idService.randomId(),"Deutschland", "Berlin", "BeispielStrasse", "10000");
         newCustomer = new Customer("123","new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
-        testUser = new AppUser("123", "test_user", "w.com", new ArrayList<>(List.of("123")), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
+        testUser = new AppUser("123", "test_user", "w.com", new ArrayList<>(List.of("123")),new ArrayList<>(List.of("")), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
         appUserRepo.save(testUser);
     }
 

@@ -38,6 +38,14 @@ public class GlobalExceptionHandler {
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 
+    // Handle InternetPlanNameTakenException
+    @ExceptionHandler(InternetPlanNameTakenException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorMessage handleInternetPlanNameTakenException(InternetPlanNameTakenException exception) {
+        logger.info("Internet Plan name already exists: " + exception.getMessage());
+        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
+    }
+
     // Handle all other exceptions
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

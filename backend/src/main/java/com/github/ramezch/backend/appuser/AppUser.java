@@ -23,6 +23,7 @@ public class AppUser implements OAuth2User {
     private String username;
     private String avatarUrl;
     private List<String> customerIds;
+    private List<String> internetPlanIds;
     private AppUserRoles role;
 
     @Transient
@@ -59,5 +60,15 @@ public class AppUser implements OAuth2User {
     @JsonIgnore
     public void setCustomerIds(List<String> newCustomerIds) {
         this.customerIds = newCustomerIds;
+    }
+
+    @JsonIgnore
+    public List<String> getInternetPlanIds() {
+        return internetPlanIds;
+    }
+
+    @JsonIgnore
+    public void setInternetPlanIds(List<String> newInternetPlanIds) {
+        this.internetPlanIds = newInternetPlanIds;
     }
 }
