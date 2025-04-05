@@ -40,6 +40,11 @@ public class InternetPlanController {
         return internetPlanService.addInternetPlan(internetPlanDTO, appUser);
     }
 
+    @PutMapping("{id}")
+    public InternetPlan updateInternetPlan(@AuthenticationPrincipal AppUser appUser, @PathVariable String id, @RequestBody @Valid InternetPlanDTO internetPlanDTO) {
+        return internetPlanService.updateInternetPlan(id, internetPlanDTO, appUser);
+    }
+
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteInternetPlan(@AuthenticationPrincipal AppUser appUser, @PathVariable String id) {

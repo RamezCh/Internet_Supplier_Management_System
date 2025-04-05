@@ -5,7 +5,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record InternetPlanDTO(
-
         String name,
 
         @NotBlank(message = "Speed cannot be blank")

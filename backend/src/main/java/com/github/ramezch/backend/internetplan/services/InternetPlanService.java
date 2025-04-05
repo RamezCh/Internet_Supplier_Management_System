@@ -2,7 +2,6 @@ package com.github.ramezch.backend.internetplan.services;
 
 import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.appuser.AppUserRepository;
-import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import com.github.ramezch.backend.exceptions.InternetPlanNameTakenException;
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
@@ -65,10 +64,11 @@ public class InternetPlanService {
         return newInternetPlan;
     }
 
-    public InternetPlan updateInternetPlan(InternetPlan updatedInternetPlan, AppUser appUser) {
-        if( !appUser.getInternetPlanIds().contains(updatedInternetPlan.id())) {
-            throw new InternetPlanNotFoundException(updatedInternetPlan.id());
+    public InternetPlan updateInternetPlan(String id, InternetPlanDTO internetPlanDTO, AppUser appUser) {
+        if( !appUser.getInternetPlanIds().contains(id)) {
+            throw new InternetPlanNotFoundException(id);
         }
+        InternetPlan updatedInternetPlan = new InternetPlan(id, internetPlanDTO.name(), internetPlanDTO.speed(), internetPlanDTO.price(), internetPlanDTO.bandwidth(), internetPlanDTO.isActive());
         return internetPlanRepo.save(updatedInternetPlan);
     }
 
