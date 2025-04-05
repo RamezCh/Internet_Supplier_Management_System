@@ -30,11 +30,27 @@ public class GlobalExceptionHandler {
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 
+    // Handle InternetPlanNotFoundException
+    @ExceptionHandler(InternetPlanNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleInternetPlanNotFoundException(InternetPlanNotFoundException exception) {
+        logger.info("Internet Plan not found: " + exception.getMessage());
+        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
+    }
+
     // Handle UsernameExistsException
     @ExceptionHandler(UsernameTakenException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorMessage handleUsernameExistsException(UsernameTakenException exception) {
         logger.info("Username already exists: " + exception.getMessage());
+        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
+    }
+
+    // Handle InternetPlanNameTakenException
+    @ExceptionHandler(InternetPlanNameTakenException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorMessage handleInternetPlanNameTakenException(InternetPlanNameTakenException exception) {
+        logger.info("Internet Plan name already exists: " + exception.getMessage());
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 
