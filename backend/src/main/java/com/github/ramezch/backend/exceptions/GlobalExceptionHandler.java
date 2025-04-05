@@ -30,6 +30,14 @@ public class GlobalExceptionHandler {
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 
+    // Handle InternetPlanNotFoundException
+    @ExceptionHandler(InternetPlanNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleInternetPlanNotFoundException(InternetPlanNotFoundException exception) {
+        logger.info("Internet Plan not found: " + exception.getMessage());
+        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
+    }
+
     // Handle UsernameExistsException
     @ExceptionHandler(UsernameTakenException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
