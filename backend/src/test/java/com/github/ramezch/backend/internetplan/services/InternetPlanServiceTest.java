@@ -67,7 +67,26 @@ class InternetPlanServiceTest {
     }
 
     @Test
-    void getInternetPlan() {
+    void getInternetPlan_whenFound_returnOptionalOfInternetPlan() {
+        // GIVEN
+        mockUser.setInternetPlanIds(List.of("1"));
+        // WHEN
+        when(internetPlanRepo.findById("1")).thenReturn(Optional.ofNullable(internetPlan1));
+        Optional<InternetPlan> actual = internetPlanService.getInternetPlan("1", mockUser);
+        // THEN
+        assertEquals(Optional.ofNullable(internetPlan1), actual);
+        verify(internetPlanRepo).findById("1");
+    }
+
+    @Test
+    void getInternetPlan_whenNotFound_returnEmptyOptional() {
+        // GIVEN
+        mockUser.setInternetPlanIds(List.of("1"));
+        // WHEN
+        Optional<InternetPlan> actual = internetPlanService.getInternetPlan("9", mockUser);
+        // THEN
+        assertEquals(Optional.empty(), actual);
+        verify(internetPlanRepo, never()).findById("9");
     }
 
     @Test
