@@ -22,7 +22,7 @@ public class InternetPlanService {
     private final AppUserRepository appUserRepository;
     private final IdService idService;
 
-    public List<InternetPlan> getUserInternetPlans(AppUser appUser) {
+    public List<InternetPlan> getInternetPlans(AppUser appUser) {
         List<String> internetPlanIds = appUser.getInternetPlanIds() != null
                 ? appUser.getInternetPlanIds()
                 : List.of();

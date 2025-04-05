@@ -22,7 +22,7 @@ public class InternetPlanController {
 
     @GetMapping
     public List<InternetPlan> getInternetPlans(@AuthenticationPrincipal AppUser appUser) {
-        return internetPlanService.getUserInternetPlans(appUser);
+        return internetPlanService.getInternetPlans(appUser);
     }
 
     @GetMapping("{id}")
