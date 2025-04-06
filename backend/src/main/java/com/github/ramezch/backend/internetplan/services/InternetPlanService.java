@@ -68,6 +68,14 @@ public class InternetPlanService {
         if( !appUser.getInternetPlanIds().contains(id)) {
             throw new InternetPlanNotFoundException(id);
         }
+
+        List<String> internetPlanIds = Optional.ofNullable(appUser.getInternetPlanIds())
+                .orElseGet(ArrayList::new);
+        boolean nameExists = internetPlanRepo.existsByNameAndIdIn(internetPlanDTO.name(), internetPlanIds);
+        if(nameExists) {
+            throw new InternetPlanNameTakenException(internetPlanDTO.name());
+        }
+
         InternetPlan updatedInternetPlan = new InternetPlan(id, internetPlanDTO.name(), internetPlanDTO.speed(), internetPlanDTO.price(), internetPlanDTO.bandwidth(), internetPlanDTO.isActive());
         return internetPlanRepo.save(updatedInternetPlan);
     }

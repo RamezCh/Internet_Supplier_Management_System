@@ -51,3 +51,20 @@ export type RadioGroupProps = {
     orientation?: 'horizontal' | 'vertical';
     className?: string;
 };
+
+export interface InternetPlan {
+    id: string;
+    name: string;
+    speed: string;
+    price: number;
+    bandwidth: string;
+    isActive: boolean;
+}
+
+export interface InternetPlanDTO {
+    name: string;
+    speed: string;
+    price: number;
+    bandwidth: string;
+    isActive: boolean;
+}
