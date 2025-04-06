@@ -9,6 +9,8 @@ import {Customers} from "./pages/Customers.tsx";
 import {AddCustomer} from "./pages/AddCustomer.tsx";
 import {ToastContainer} from "react-toastify";
 import {EditCustomer} from "./pages/EditCustomer.tsx";
+import {InternetPlans} from "./pages/InternetPlans.tsx";
+import {AddInternetPlan} from "./pages/AddInternetPlan.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -35,6 +37,8 @@ function App() {
               <Route element={<ProtectedRoutes appUser={appUser} />}>
                 <Route path="/customer/add" element={<AddCustomer/>} />
                 <Route path="/customer/:id/edit" element={<EditCustomer/>} />
+                <Route path="/internet-plans" element={<InternetPlans/>} />
+                <Route path="/internet-plan/add" element={<AddInternetPlan/>} />
               </Route>
             </Routes>
           </div>

@@ -12,6 +12,8 @@ export const Navbar = () => {
         <div>
             <Link to="/">Customers</Link>
             <Link to="/customer/add">Add Customer</Link>
+            <Link to="/internet-plans">Internet Plans</Link>
+            <Link to="/internet-plan/add">Add Internet Plan</Link>
         </div>
         <Button variant="red"  handleClick={logout}>
             Sign Out
