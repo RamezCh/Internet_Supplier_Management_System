@@ -16,11 +16,13 @@ export const AddInternetPlan = () => {
         setIsSubmitting(true);
         setSubmissionError({});
         try {
-            await axios.post("/api/internet_plans", plan, {
-                validateStatus: (status) => status < 500 // Don't throw for 4xx errors
-            });
-            toast.success("Internet plan added successfully!");
-            navigate("/internet-plans");
+            const response = await axios.post("/api/internet_plans", plan);
+
+            // Only navigate on successful creation (2xx status)
+            if (response.status >= 200 && response.status < 300) {
+                toast.success("Internet plan added successfully!");
+                navigate("/internet-plans");
+            }
         } catch (error) {
             const axiosError = error as AxiosError<{
                 errors?: Partial<Record<keyof InternetPlanDTO, string>>;
@@ -41,13 +43,6 @@ export const AddInternetPlan = () => {
                             name: "A plan with this name already exists"
                         });
                         toast.error("A plan with this name already exists");
-                        break;
-                    case 401:
-                        toast.error("You need to be logged in to perform this action");
-                        navigate("/login");
-                        break;
-                    case 403:
-                        toast.error("You don't have permission to add plans");
                         break;
                     default:
                         toast.error("Failed to add internet plan. Please try again.");
