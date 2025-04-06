@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { FaBolt, FaTachometerAlt, FaDollarSign } from "react-icons/fa";
-import {InternetPlan} from "../types.ts";
+import { FaBolt, FaTachometerAlt, FaDollarSign, FaEdit, FaTrash } from "react-icons/fa";
+import { InternetPlan } from "../types.ts";
+import { useNavigate } from "react-router-dom";
+import {Button} from "../shared/Button.tsx";
 
 export const InternetPlans = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [internetPlans, setInternetPlans] = useState<InternetPlan[]>([]);
+    const navigate = useNavigate();
 
     const fetchInternetPlans = async () => {
         try {
@@ -18,6 +21,23 @@ export const InternetPlans = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this plan?")) return;
+
+        try {
+            await axios.delete(`/api/internet_plans/${id}`);
+            toast.success("Plan deleted successfully");
+            fetchInternetPlans(); // Refresh the list
+        } catch (err) {
+            console.error("Error deleting plan:", err);
+            toast.error("Failed to delete plan");
+        }
+    };
+
+    const handleEdit = (id: string) => {
+        navigate(`/internet-plan/${id}/edit`);
     };
 
     useEffect(() => {
@@ -42,8 +62,6 @@ export const InternetPlans = () => {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">Internet Plans</h2>
-
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {internetPlans.map((plan) => (
                     <div
@@ -61,8 +79,8 @@ export const InternetPlans = () => {
                                 </h3>
                                 {!plan.isActive && (
                                     <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                    Inactive
-                  </span>
+                                        Inactive
+                                    </span>
                                 )}
                             </div>
 
@@ -83,16 +101,10 @@ export const InternetPlans = () => {
                                 </div>
                             </div>
 
-                            <button
-                                className={`mt-6 w-full py-2 px-4 rounded-md font-medium ${
-                                    plan.isActive
-                                        ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                        : "bg-gray-200 text-gray-600 cursor-not-allowed"
-                                } transition-colors`}
-                                disabled={!plan.isActive}
-                            >
-                                {plan.isActive ? "Select Plan" : "Currently Unavailable"}
-                            </button>
+                            <div className="mt-6 flex justify-between space-x-2">
+                                <Button className="py-2 px-3 flex items-center justify-center gap-2" onClick={() => handleEdit(plan.id)}><FaEdit /> Edit</Button>
+                                <Button className="py-2 px-3 flex items-center justify-center gap-2" onClick={() => handleDelete(plan.id)} variant="red"><FaTrash /> Delete</Button>
+                            </div>
                         </div>
                     </div>
                 ))}
