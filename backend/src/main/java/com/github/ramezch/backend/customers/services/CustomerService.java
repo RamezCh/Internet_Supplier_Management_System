@@ -14,7 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -86,7 +86,7 @@ public class CustomerService {
             newCustomerID = idService.randomId();
         } while (customerRepo.existsById(newCustomerID));
 
-        LocalDate registrationDate = LocalDate.now();
+        Instant registrationDate = Instant.now();
 
         Customer newCustomer = new Customer(newCustomerID, customerDTO.username(), customerDTO.fullName(),
                 customerDTO.phone(), customerDTO.address(), registrationDate, customerDTO.status(), customerDTO.notes());

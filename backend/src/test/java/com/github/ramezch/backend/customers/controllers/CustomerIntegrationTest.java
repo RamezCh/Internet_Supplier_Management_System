@@ -18,7 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +46,7 @@ class CustomerIntegrationTest {
 
     @BeforeEach
     void setup() {
-        LocalDate now = LocalDate.now();
+        Instant now = Instant.now();
         Address address = new Address(idService.randomId(),"Deutschland", "Berlin", "BeispielStrasse", "10000");
         newCustomer = new Customer("123","new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
         testUser = new AppUser("123", "test_user", "w.com", new ArrayList<>(List.of("123")),new ArrayList<>(List.of("")), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
@@ -78,13 +78,12 @@ class CustomerIntegrationTest {
                                         "street": "BeispielStrasse",
                                         "postalCode": "10000"
                                     },
-                                    "registrationDate": "%s",
                                     "status": "PENDING_ACTIVATION",
                                     "notes": "test"
                                 }
                             ]
                         }
-                """.formatted(LocalDate.now())));
+                """));
     }
 
     @Test
@@ -110,11 +109,10 @@ class CustomerIntegrationTest {
                                 "street": "BeispielStrasse",
                                 "postalCode": "10000"
                             },
-                            "registrationDate": "%s",
                             "status": "PENDING_ACTIVATION",
                             "notes": "test"
                         }
-                """.formatted(LocalDate.now())));
+                """));
     }
 
     @Test
@@ -360,7 +358,7 @@ class CustomerIntegrationTest {
     void searchCustomers_withStatusOnly_returnsFilteredCustomers() throws Exception {
         // GIVEN
         Customer activeCustomer = new Customer("active123", "active_user", "Active User", "12345678",
-                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "active notes");
+                newCustomer.address(), Instant.now(), CustomerStatus.ACTIVE, "active notes");
         repo.saveAll(List.of(newCustomer, activeCustomer));
         testUser.setCustomerIds(List.of("123", "active123"));
 
@@ -391,13 +389,13 @@ class CustomerIntegrationTest {
         // GIVEN
         Customer usernameMatch = new Customer("124326", "hamburg_user", "User", "87654321",
                 new Address(idService.randomId(), "Deutschland", "Hamburg", "OtherStreet", "10115"),
-                LocalDate.now(), CustomerStatus.ACTIVE, "notes");
+                Instant.now(), CustomerStatus.ACTIVE, "notes");
         Customer fullNameMatch = new Customer("987654", "dsfgh", "Hamburg User", "87654321",
                 new Address(idService.randomId(), "Deutschland", "dfgh", "OtherStreet", "10115"),
-                LocalDate.now(), CustomerStatus.ACTIVE, "notes");
+                Instant.now(), CustomerStatus.ACTIVE, "notes");
         Customer cityMatch = new Customer("34567865", "dsfghj", "CDUser", "87654321",
                 new Address(idService.randomId(), "Deutschland", "Hamburg", "OtherStreet", "10115"),
-                LocalDate.now(), CustomerStatus.ACTIVE, "notes");
+                Instant.now(), CustomerStatus.ACTIVE, "notes");
 
         repo.saveAll(List.of(usernameMatch, fullNameMatch, cityMatch));
         testUser.setCustomerIds(List.of(usernameMatch.id(), fullNameMatch.id(), cityMatch.id()));
@@ -447,7 +445,7 @@ class CustomerIntegrationTest {
         // GIVEN
         Customer pendingBerlinCustomer = new Customer("pendingBerlin", "pending_berlin", "Pending Berlin", "11111111",
                 new Address(idService.randomId(), "Deutschland", "Berlin", "PendingStrasse", "10115"),
-                LocalDate.now(), CustomerStatus.PENDING_ACTIVATION, "pending berlin");
+                Instant.now(), CustomerStatus.PENDING_ACTIVATION, "pending berlin");
         repo.saveAll(List.of(newCustomer, pendingBerlinCustomer));
         testUser.setCustomerIds(List.of("123", "pendingBerlin"));
 
@@ -500,7 +498,7 @@ class CustomerIntegrationTest {
     void searchCustomers_withNoParams_returnsAllCustomers() throws Exception {
         // GIVEN
         Customer anotherCustomer = new Customer("another123", "another_user", "Another User", "22222222",
-                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "another notes");
+                newCustomer.address(), Instant.now(), CustomerStatus.ACTIVE, "another notes");
         repo.saveAll(List.of(newCustomer, anotherCustomer));
         testUser.setCustomerIds(List.of("123", "another123"));
 
@@ -561,9 +559,9 @@ class CustomerIntegrationTest {
     void searchCustomers_withPagination_returnsCorrectPage() throws Exception {
         // GIVEN
         Customer customer2 = new Customer("234", "customer2", "Customer Two", "22222222",
-                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "notes2");
+                newCustomer.address(), Instant.now(), CustomerStatus.ACTIVE, "notes2");
         Customer customer3 = new Customer("345", "customer3", "Customer Three", "33333333",
-                newCustomer.address(), LocalDate.now(), CustomerStatus.ACTIVE, "notes3");
+                newCustomer.address(), Instant.now(), CustomerStatus.ACTIVE, "notes3");
         repo.saveAll(List.of(newCustomer, customer2, customer3));
         testUser.setCustomerIds(List.of("123", "234", "345"));
 

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.*;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,7 +33,7 @@ class CustomerServiceTest {
         idService = mock(IdService.class);
         service = new CustomerService(customerRepo, appUserRepo, idService);
 
-        LocalDate now = LocalDate.now();
+        Instant now = Instant.now();
         customer1 = new Customer("123", "new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
         customer2 = new Customer("234", "new_customer2", "New Customer 2", "78863121", address, now, CustomerStatus.PENDING_ACTIVATION, "test2");
         customerDTO1 = new CustomerDTO("new_customer", "New Customer", "78863120", address, CustomerStatus.PENDING_ACTIVATION, "test");
