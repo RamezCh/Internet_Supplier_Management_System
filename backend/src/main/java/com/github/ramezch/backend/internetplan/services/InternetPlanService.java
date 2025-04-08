@@ -6,6 +6,7 @@ import com.github.ramezch.backend.exceptions.InternetPlanNameTakenException;
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.models.InternetPlanDTO;
+import com.github.ramezch.backend.internetplan.models.InternetPlanSmallDTO;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.utils.IdService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,18 @@ public class InternetPlanService {
         return internetPlanIds.isEmpty()
                 ? List.of()
                 : internetPlanRepo.findAllById(internetPlanIds);
+    }
+
+    public List<InternetPlanSmallDTO> getActivePlansByAppUser(AppUser appUser) {
+        if (appUser.getInternetPlanIds() == null || appUser.getInternetPlanIds().isEmpty()) {
+            return List.of();
+        }
+
+        List<InternetPlan> activePlans = internetPlanRepo.findByIdInAndActiveTrue(appUser.getInternetPlanIds());
+
+        return activePlans.stream()
+                .map(plan -> new InternetPlanSmallDTO(plan.id(), plan.name()))
+                .collect(Collectors.toList());
     }
 
     public Optional<InternetPlan> getInternetPlan(String id, AppUser appUser) {

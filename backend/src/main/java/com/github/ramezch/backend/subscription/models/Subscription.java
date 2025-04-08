@@ -8,24 +8,23 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
 
 import java.time.Instant;
-import java.time.LocalDate;
 
 public record Subscription(
         @Id String id,
         @NotNull Customer customer,
         @NotNull InternetPlan internetPlan,
         @NotNull Instant startDate,
-        @FutureOrPresent LocalDate endDate,
+        @FutureOrPresent Instant endDate,
         @NotNull SubscriptionStatus status,
         @Nullable String notes
 ) {
     public boolean isExpiringSoon() {
         return status == SubscriptionStatus.ACTIVE
-                && LocalDate.now().isAfter(endDate.minusWeeks(1))
-                && LocalDate.now().isBefore(endDate);
+                && Instant.now().isAfter(endDate.minusSeconds(604800)) // 7 days, 24hr in day, 60 minutes in an hour, 60 seconds in a minute
+                && Instant.now().isBefore(endDate);
     }
 
     public boolean isExpired() {
-        return LocalDate.now().isAfter(endDate);
+        return Instant.now().isAfter(endDate);
     }
 }

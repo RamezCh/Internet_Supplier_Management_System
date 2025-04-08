@@ -4,6 +4,7 @@ import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.models.InternetPlanDTO;
+import com.github.ramezch.backend.internetplan.models.InternetPlanSmallDTO;
 import com.github.ramezch.backend.internetplan.services.InternetPlanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,11 @@ public class InternetPlanController {
     @GetMapping
     public List<InternetPlan> getInternetPlans(@AuthenticationPrincipal AppUser appUser) {
         return internetPlanService.getInternetPlans(appUser);
+    }
+
+    @GetMapping("/small")
+    public List<InternetPlanSmallDTO> getActivePlansByUser(@AuthenticationPrincipal AppUser appUser) {
+        return internetPlanService.getActivePlansByAppUser(appUser);
     }
 
     @GetMapping("{id}")
