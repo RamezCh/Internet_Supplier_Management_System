@@ -5,7 +5,7 @@ import jakarta.validation.constraints.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.CreatedDate;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 
 public record Customer(
@@ -28,7 +28,7 @@ public record Customer(
 
         @CreatedDate
         @PastOrPresent(message = "Registration date cannot be in the future")
-        LocalDate registrationDate,
+        Instant registrationDate,
 
         @NotNull(message = "Status must be specified")
         CustomerStatus status,

@@ -8,13 +8,14 @@ import com.github.ramezch.backend.customers.models.CustomerStatus;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import com.github.ramezch.backend.exceptions.UsernameTakenException;
+import com.github.ramezch.backend.subscription.services.SubscriptionService;
 import com.github.ramezch.backend.utils.IdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ public class CustomerService {
     private final CustomerRepository customerRepo;
     private final AppUserRepository appUserRepository;
     private final IdService idService;
+    private final SubscriptionService subscriptionService;
 
     public Page<Customer> getCustomers(Pageable pageable, AppUser appUser) {
         List<String> customerIds = Optional.ofNullable(appUser.getCustomerIds())
@@ -67,7 +69,7 @@ public class CustomerService {
         return customerRepo.findById(id);
     }
 
-    public Customer addCustomer(CustomerDTO customerDTO, AppUser appUser) {
+    public Customer addCustomer(CustomerDTO customerDTO, AppUser appUser, String internetPlanId) {
         List<String> customerIds = Optional.ofNullable(appUser.getCustomerIds())
                 .orElseGet(ArrayList::new);
 
@@ -86,12 +88,14 @@ public class CustomerService {
             newCustomerID = idService.randomId();
         } while (customerRepo.existsById(newCustomerID));
 
-        LocalDate registrationDate = LocalDate.now();
+        Instant registrationDate = Instant.now();
 
         Customer newCustomer = new Customer(newCustomerID, customerDTO.username(), customerDTO.fullName(),
                 customerDTO.phone(), customerDTO.address(), registrationDate, customerDTO.status(), customerDTO.notes());
 
         Customer savedCustomer = customerRepo.save(newCustomer);
+
+        subscriptionService.createSubscription(savedCustomer, internetPlanId);
 
         customerIds.add(newCustomerID);
         appUser.setCustomerIds(customerIds);

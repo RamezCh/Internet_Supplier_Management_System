@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface InternetPlanRepository extends MongoRepository<InternetPlan, String> {
     boolean existsByNameAndIdIn(String name, List<String> internetPlanIds);
+    List<InternetPlan> findByIdInAndActiveTrue(List<String> ids);
 }

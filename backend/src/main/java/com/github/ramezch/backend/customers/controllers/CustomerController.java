@@ -47,8 +47,8 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Customer addCustomer(@RequestBody @Valid CustomerDTO customerDTO, @AuthenticationPrincipal AppUser appUser) {
-        return customerService.addCustomer(customerDTO, appUser);
+    public Customer addCustomer(@RequestBody @Valid CustomerDTO customerDTO, @AuthenticationPrincipal AppUser appUser, @RequestParam String internetPlanId) {
+        return customerService.addCustomer(customerDTO, appUser, internetPlanId);
     }
 
     @PutMapping("{id}")
