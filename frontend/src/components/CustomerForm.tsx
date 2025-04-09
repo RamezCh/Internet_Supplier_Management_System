@@ -19,6 +19,7 @@ interface CustomerFormProps {
     };
     initialPlans?: InternetPlanSmallDTO[];
     internetPlanId?: string;
+    hideInternetPlan?: boolean;
 }
 
 const defaultCustomer: CustomerDTO = {
@@ -33,7 +34,7 @@ const defaultCustomer: CustomerDTO = {
     },
     status: "PENDING_ACTIVATION",
     notes: "",
-    internetPlan: undefined,
+    internetPlan: undefined
 };
 
 export const CustomerForm = ({
@@ -48,6 +49,7 @@ export const CustomerForm = ({
                                  submissionError,
                                  initialPlans = [],
                                  internetPlanId,
+                                 hideInternetPlan = false,
                              }: CustomerFormProps) => {
     const [customer, setCustomer] = useState<CustomerDTO>({
         ...defaultCustomer,
@@ -104,6 +106,15 @@ export const CustomerForm = ({
     }, []);
 
     const validateForm = useCallback((): boolean => {
+        if(hideInternetPlan) {
+            return Boolean(
+                customer.username.trim() &&
+                customer.fullName.trim() &&
+                customer.phone.trim() &&
+                customer.address.street.trim() &&
+                customer.address.city.trim()
+            );
+        }
         return Boolean(
             customer.username.trim() &&
             customer.fullName.trim() &&
@@ -182,7 +193,7 @@ export const CustomerForm = ({
             if (!customer.username.trim()) newErrors.username = "Username is required";
             if (!customer.fullName.trim()) newErrors.fullName = "Full name is required";
             if (!customer.phone.trim()) newErrors.phone = "Phone Number is required";
-            if (!selectedPlanId) newErrors.internetPlan = "Internet plan is required";
+            if (!hideInternetPlan && !selectedPlanId) newErrors.internetPlan = "Internet plan is required";
 
             const addressErrors: Partial<Record<keyof CustomerDTO["address"], string>> = {};
             if (!customer.address.street.trim()) addressErrors.street = "Street is required";
@@ -254,13 +265,13 @@ export const CustomerForm = ({
                     ]}
                     error={errors?.status}
                 />
-                <Select
+                {!hideInternetPlan && <Select
                     name="internetPlan"
                     label="Internet Plan"
                     value={selectedPlanId}
                     onChange={handleInternetPlanChange}
                     options={[
-                        { value: "", label: "Select internet plan"},
+                        {value: "", label: "Select internet plan"},
                         ...internetPlans.map((plan) => ({
                             value: plan.id,
                             label: plan.name,
@@ -269,7 +280,7 @@ export const CustomerForm = ({
                     error={errors?.internetPlan}
                     disabled={loadingPlans}
                     required
-                />
+                />}
             </div>
 
             <fieldset className="border border-gray-200 rounded-md p-4">

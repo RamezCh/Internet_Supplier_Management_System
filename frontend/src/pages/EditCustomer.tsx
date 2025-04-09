@@ -72,13 +72,14 @@ export const EditCustomer = () => {
 
     return (
         <CustomerForm
-            initialData={initialData}
+            initialData={initialData as CustomerDTO}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
             submitButtonText="Update Customer"
             resetButtonText="Reset Changes"
             mode="edit"
+            hideInternetPlan={true}
         />
     );
 };

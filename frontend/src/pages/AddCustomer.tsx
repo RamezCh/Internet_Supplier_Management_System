@@ -21,7 +21,7 @@ export const AddCustomer = () => {
             const payload = {
                 ...customer
             };
-            await axios.post("/api/customers?internetPlanId=" + internetPlanId, payload);
+            await axios.post(`/api/customers?internetPlanId=${internetPlanId}`, payload);
             toast.success("Customer added successfully!");
             navigate("/");
         } catch (error) {
