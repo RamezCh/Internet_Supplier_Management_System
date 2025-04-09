@@ -1,22 +1,24 @@
 import { Input } from "../shared/Input";
 import { Textarea } from "../shared/Textarea";
 import { Select } from "../shared/Select";
-import {CustomerDTO, CustomerStatus} from "../types";
-import {ChangeEvent, useState, useEffect, FormEvent} from "react";
+import { CustomerDTO, CustomerStatus, InternetPlanSmallDTO } from "../types";
+import { ChangeEvent, useState, useEffect, FormEvent, useCallback } from "react";
 import { Button } from "../shared/Button";
 
 interface CustomerFormProps {
     initialData?: Partial<CustomerDTO>;
-    onSubmit: (customer: CustomerDTO) => Promise<void>;
+    onSubmit: (customer: CustomerDTO, internetPlanId:string) => Promise<void>;
     onCancel?: () => void;
     isSubmitting: boolean;
     submitButtonText: string;
     resetButtonText: string;
-    mode: 'add' | 'edit';
+    mode: "add" | "edit";
     loading?: boolean;
-    submissionError?: Partial<Record<keyof Omit<CustomerDTO, 'address'>, string>> & {
-        address?: Partial<Record<keyof CustomerDTO['address'], string>>;
+    submissionError?: Partial<Record<keyof Omit<CustomerDTO, "address">, string>> & {
+        address?: Partial<Record<keyof CustomerDTO["address"], string>>;
     };
+    initialPlans?: InternetPlanSmallDTO[];
+    internetPlanId?: string;
 }
 
 const defaultCustomer: CustomerDTO = {
@@ -30,7 +32,8 @@ const defaultCustomer: CustomerDTO = {
         postalCode: "",
     },
     status: "PENDING_ACTIVATION",
-    notes: ""
+    notes: "",
+    internetPlan: undefined,
 };
 
 export const CustomerForm = ({
@@ -43,113 +46,165 @@ export const CustomerForm = ({
                                  mode,
                                  loading = false,
                                  submissionError,
+                                 initialPlans = [],
+                                 internetPlanId,
                              }: CustomerFormProps) => {
-
     const [customer, setCustomer] = useState<CustomerDTO>({
         ...defaultCustomer,
         ...initialData,
         address: {
             ...defaultCustomer.address,
-            ...initialData?.address
-        }
+            ...initialData?.address,
+        },
+        internetPlan: initialData?.internetPlan || (internetPlanId ? { id: internetPlanId, name: "" } : undefined),
     });
 
     const [errors, setErrors] = useState<
-        NonNullable<CustomerFormProps['submissionError']>
+        NonNullable<CustomerFormProps["submissionError"]>
     >({});
+    const [internetPlans, setInternetPlans] = useState<InternetPlanSmallDTO[]>(initialPlans);
+    const [loadingPlans, setLoadingPlans] = useState(!initialPlans.length);
+    const [selectedPlanId, setSelectedPlanId] = useState<string>(internetPlanId ?? "");
+    const [isFormValid, setIsFormValid] = useState(false);
 
     useEffect(() => {
         if (initialData) {
-            setCustomer(() => ({
+            setCustomer({
                 ...defaultCustomer,
                 ...initialData,
                 address: {
                     ...defaultCustomer.address,
-                    ...initialData.address
-                }
-            }));
+                    ...initialData.address,
+                },
+                internetPlan: initialData.internetPlan || (internetPlanId ? { id: internetPlanId, name: "" } : undefined),
+            });
+            setSelectedPlanId(initialData.internetPlan?.id || internetPlanId || "");
         }
-    }, [initialData]);
+    }, [initialData, internetPlanId]);
 
     useEffect(() => {
         if (submissionError) {
-            setErrors(prev => ({ ...prev, ...submissionError }));
+            setErrors((prev) => ({ ...prev, ...submissionError }));
         }
     }, [submissionError]);
 
+    const fetchInternetPlans = async (): Promise<InternetPlanSmallDTO[]> => {
+        const response = await fetch("/api/internet_plans/small");
+        if (!response.ok) throw new Error("Failed to fetch internet plans");
+        return response.json();
+    };
+
+    useEffect(() => {
+        if (!initialPlans.length) {
+            fetchInternetPlans()
+                .then(setInternetPlans)
+                .catch(console.error)
+                .finally(() => setLoadingPlans(false));
+        }
+    }, []);
+
+    const validateForm = useCallback((): boolean => {
+        return Boolean(
+            customer.username.trim() &&
+            customer.fullName.trim() &&
+            customer.phone.trim() &&
+            selectedPlanId &&
+            customer.address.street.trim() &&
+            customer.address.city.trim()
+        );
+    }, [customer, selectedPlanId]);
+
+    useEffect(() => {
+        setIsFormValid(validateForm());
+    }, [validateForm]);
+
     const handleOnChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setCustomer(prev => ({
+        setCustomer((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
         if (errors?.[name as keyof CustomerDTO]) {
-            setErrors(prev => ({ ...prev, [name]: undefined }));
+            setErrors((prev) => ({ ...prev, [name]: undefined }));
         }
     };
 
     const handleAddressChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setCustomer(prev => ({
+        setCustomer((prev) => ({
             ...prev,
             address: {
                 ...prev.address,
-                [name]: value
-            }
+                [name]: value,
+            },
         }));
-        if (errors?.address?.[name as keyof CustomerDTO['address']]) {
-            setErrors(prev => ({
+        if (errors?.address?.[name as keyof CustomerDTO["address"]]) {
+            setErrors((prev) => ({
                 ...prev,
                 address: {
                     ...prev.address,
-                    [name]: undefined
-                }
+                    [name]: undefined,
+                },
             }));
         }
     };
 
-    const handleStatusChange = (value: string) => {
-        setCustomer(prev => ({
+    const handleStatusChange = (e: ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        setCustomer((prev) => ({
             ...prev,
-            status: value as CustomerStatus
+            status: value as CustomerStatus,
         }));
         if (errors?.status) {
-            setErrors(prev => ({ ...prev, status: undefined }));
+            setErrors((prev) => ({ ...prev, status: undefined }));
         }
     };
 
-    const validateForm = (): boolean => {
-        const newErrors: CustomerFormProps['submissionError'] = {};
-
-        if (!customer.username.trim()) newErrors.username = "Username is required";
-        if (!customer.fullName.trim()) newErrors.fullName = "Full name is required";
-        if (!customer.phone.trim()) newErrors.phone = "Phone Number is required";
-
-        // Address validation
-        const addressErrors: Partial<Record<keyof CustomerDTO['address'], string>> = {};
-        if (!customer.address.street.trim()) addressErrors.street = "Street is required";
-        if (!customer.address.city.trim()) addressErrors.city = "City is required";
-
-        if (Object.keys(addressErrors).length > 0) {
-            newErrors.address = addressErrors;
+    const handleInternetPlanChange = (e: ChangeEvent<HTMLSelectElement>) => {
+        const selectedPlanId = e.target.value;
+        const selectedPlan = internetPlans.find(plan => plan.id === selectedPlanId);
+        setSelectedPlanId(selectedPlanId);
+        setCustomer((prev) => ({
+            ...prev,
+            internetPlan: selectedPlan ? { id: selectedPlan.id, name: selectedPlan.name } : undefined,
+        }));
+        if (errors?.internetPlan) {
+            setErrors((prev) => ({ ...prev, internetPlan: undefined }));
         }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!validateForm()) return;
-        await onSubmit(customer);
+
+        const isValid = (() => {
+            const newErrors: CustomerFormProps["submissionError"] = {};
+
+            if (!customer.username.trim()) newErrors.username = "Username is required";
+            if (!customer.fullName.trim()) newErrors.fullName = "Full name is required";
+            if (!customer.phone.trim()) newErrors.phone = "Phone Number is required";
+            if (!selectedPlanId) newErrors.internetPlan = "Internet plan is required";
+
+            const addressErrors: Partial<Record<keyof CustomerDTO["address"], string>> = {};
+            if (!customer.address.street.trim()) addressErrors.street = "Street is required";
+            if (!customer.address.city.trim()) addressErrors.city = "City is required";
+
+            if (Object.keys(addressErrors).length > 0) {
+                newErrors.address = addressErrors;
+            }
+
+            setErrors(newErrors);
+            return Object.keys(newErrors).length === 0;
+        })();
+
+        if (!isValid) return;
+
+        const cleanedCustomer = { ...customer, internetPlan: undefined };
+        await onSubmit(cleanedCustomer, selectedPlanId);
     };
 
     const handleReset = () => {
-        if (onCancel) {
-            onCancel();
-        } else {
-            setCustomer(defaultCustomer);
-        }
+        if (onCancel) onCancel();
+        else setCustomer(defaultCustomer);
     };
 
     if (loading) return <div className="text-center py-4">Loading...</div>;
@@ -164,8 +219,8 @@ export const CustomerForm = ({
                     onChange={handleOnChange}
                     error={errors?.username}
                     required
-                    disabled={mode === 'edit'}
-                    placeholder="Enter unique username (e.g., john_doe123)"
+                    disabled={mode === "edit"}
+                    placeholder="Enter unique username"
                 />
                 <Input
                     name="fullName"
@@ -174,7 +229,7 @@ export const CustomerForm = ({
                     onChange={handleOnChange}
                     error={errors?.fullName}
                     required
-                    placeholder="Enter customer's full name (e.g., John Doe)"
+                    placeholder="Enter customer's full name"
                 />
                 <Input
                     name="phone"
@@ -183,13 +238,13 @@ export const CustomerForm = ({
                     onChange={handleOnChange}
                     error={errors?.phone}
                     required
-                    placeholder="Enter phone number (e.g., +1 555-123-4567)"
+                    placeholder="Enter phone number"
                 />
                 <Select
                     name="status"
                     label="Status"
                     value={customer.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
+                    onChange={handleStatusChange}
                     options={[
                         { value: "ACTIVE", label: "Active" },
                         { value: "PENDING_ACTIVATION", label: "Pending Activation" },
@@ -198,6 +253,22 @@ export const CustomerForm = ({
                         { value: "EXPIRED", label: "Expired" },
                     ]}
                     error={errors?.status}
+                />
+                <Select
+                    name="internetPlan"
+                    label="Internet Plan"
+                    value={selectedPlanId}
+                    onChange={handleInternetPlanChange}
+                    options={[
+                        { value: "", label: "Select internet plan"},
+                        ...internetPlans.map((plan) => ({
+                            value: plan.id,
+                            label: plan.name,
+                        })),
+                    ]}
+                    error={errors?.internetPlan}
+                    disabled={loadingPlans}
+                    required
                 />
             </div>
 
@@ -211,7 +282,7 @@ export const CustomerForm = ({
                         onChange={handleAddressChange}
                         error={errors?.address?.street}
                         required
-                        placeholder="Enter street address (e.g., 123 Main St)"
+                        placeholder="Enter street address"
                     />
                     <Input
                         name="city"
@@ -220,7 +291,7 @@ export const CustomerForm = ({
                         onChange={handleAddressChange}
                         error={errors?.address?.city}
                         required
-                        placeholder="Enter city (e.g., New York)"
+                        placeholder="Enter city"
                     />
                     <Input
                         name="postalCode"
@@ -228,14 +299,14 @@ export const CustomerForm = ({
                         value={customer.address.postalCode}
                         onChange={handleAddressChange}
                         error={errors?.address?.postalCode}
-                        placeholder="Enter postal/zip code (e.g., 10001)"
+                        placeholder="Enter postal code"
                     />
                     <Input
                         name="country"
                         label="Country"
                         value={customer.address.country}
                         onChange={handleAddressChange}
-                        placeholder="Enter country (e.g., United States)"
+                        placeholder="Enter country"
                     />
                 </div>
             </fieldset>
@@ -243,10 +314,10 @@ export const CustomerForm = ({
             <Textarea
                 name="notes"
                 label="Notes"
-                value={customer.notes || ""}
+                value={customer.notes ?? ""}
                 onChange={handleOnChange}
                 error={errors?.notes}
-                placeholder="Enter any additional notes about the customer..."
+                placeholder="Enter any additional notes"
             />
 
             <div className="flex justify-between space-x-3 pt-4">
@@ -261,7 +332,7 @@ export const CustomerForm = ({
                 <Button
                     type="submit"
                     variant="primary"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !isFormValid}
                     isLoading={isSubmitting}
                 >
                     {submitButtonText}

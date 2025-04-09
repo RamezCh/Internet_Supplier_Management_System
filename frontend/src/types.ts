@@ -17,14 +17,20 @@ export type CustomerStatus = "ACTIVE" |
     "EXPIRING" | "SUSPENDED" |
     "EXPIRED" | "PENDING_ACTIVATION";
 
-export type CustomerDTO = {
-    username: string,
-    fullName: string,
-    phone: string,
-    address: Address,
-    status: CustomerStatus,
-    notes: string
-};
+export interface CustomerDTO {
+    username: string;
+    fullName: string;
+    phone: string;
+    address: {
+        country: string;
+        city: string;
+        street: string;
+        postalCode: string;
+    };
+    status: CustomerStatus;
+    notes?: string;
+    internetPlan?: InternetPlanSmallDTO;
+}
 
 export type Customer = {
     id: string,
@@ -68,3 +74,9 @@ export interface InternetPlanDTO {
     bandwidth: string;
     isActive: boolean;
 }
+
+export interface InternetPlanSmallDTO {
+    id: string;
+    name: string;
+}
+

@@ -14,11 +14,14 @@ export const AddCustomer = () => {
     >({});
     const navigate = useNavigate();
 
-    const handleSubmit = async (customer: CustomerDTO) => {
+    const handleSubmit = async (customer: CustomerDTO, internetPlanId: string) => {
         setIsSubmitting(true);
         setSubmissionError({});
         try {
-            await axios.post("/api/customers", customer);
+            const payload = {
+                ...customer
+            };
+            await axios.post("/api/customers?internetPlanId=" + internetPlanId, payload);
             toast.success("Customer added successfully!");
             navigate("/");
         } catch (error) {
@@ -34,6 +37,7 @@ export const AddCustomer = () => {
             setIsSubmitting(false);
         }
     };
+
 
     return (
         <CustomerForm

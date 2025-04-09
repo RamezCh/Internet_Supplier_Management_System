@@ -39,7 +39,7 @@ public class InternetPlanService {
             return List.of();
         }
 
-        List<InternetPlan> activePlans = internetPlanRepo.findByIdInAndActiveTrue(appUser.getInternetPlanIds());
+        List<InternetPlan> activePlans = internetPlanRepo.findByIdInAndIsActive(appUser.getInternetPlanIds(), true);
 
         return activePlans.stream()
                 .map(plan -> new InternetPlanSmallDTO(plan.id(), plan.name()))

@@ -2,7 +2,7 @@ import SignInButton from "../shared/SignInButton.tsx";
 
 export const WelcomePage = () => {
 
-    function login() {
+    function loginGitHub() {
         // window.location.host is whats after www. and the port
         // e.g. localhost:5173
         // window.location.origin is complete url with port
@@ -15,14 +15,19 @@ export const WelcomePage = () => {
         window.open(host + '/oauth2/authorization/github', '_self')
     }
 
+    function loginGoogle() {
+        const host = window.location.host === 'localhost:5173' ? 'http://localhost:8080' : window.location.origin
+        window.open(host + '/oauth2/authorization/google', '_self')
+    }
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-6">
             <div className="bg-white shadow-lg rounded-lg p-8 max-w-lg text-center">
                 <h1 className="text-2xl font-bold text-gray-800">Welcome to the Management System</h1>
                 <p className="text-gray-600 mt-2">Internet suppliers, please log in to access your customers.</p>
                 <div className="mt-6 space-y-4">
-                    <SignInButton provider="google" onClick={login} />
-                    <SignInButton provider="github" onClick={login} />
+                    <SignInButton provider="google" onClick={loginGoogle} />
+                    <SignInButton provider="github" onClick={loginGitHub} />
                 </div>
             </div>
         </div>
