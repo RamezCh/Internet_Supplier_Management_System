@@ -80,7 +80,7 @@ export const CustomerForm = ({
                 },
                 internetPlan: initialData.internetPlan || (internetPlanId ? { id: internetPlanId, name: "" } : undefined),
             });
-            setSelectedPlanId(initialData.internetPlan?.id || internetPlanId || "");
+            setSelectedPlanId((initialData.internetPlan?.id ?? internetPlanId) ?? "");
         }
     }, [initialData, internetPlanId]);
 

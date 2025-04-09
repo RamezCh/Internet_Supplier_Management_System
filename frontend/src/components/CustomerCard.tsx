@@ -82,7 +82,13 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
                 {columnVisibility.registrationDate && (
                     <div className="flex gap-2 items-center min-w-[200px]">
                         <span className="font-medium text-gray-600">Registered:</span>
-                        <span className="text-gray-800">{customer.registrationDate || '-'}</span>
+                        <span className="text-gray-800">{new Date(customer.registrationDate).toLocaleString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        }) || '-'}</span>
                     </div>
                 )}
 
