@@ -23,21 +23,33 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
+        String provider = userRequest.getClientRegistration().getRegistrationId();
+
         AppUser appUser = appUserRepository.findById(oAuth2User.getName())
-                .orElseGet(() -> saveUser(oAuth2User));
+                .orElseGet(() -> createUser(oAuth2User, provider));
+
+        appUser.setAttributes(oAuth2User.getAttributes());
         appUser.setSimpleGrantedAuthorities(List.of(new SimpleGrantedAuthority("ROLE_" + appUser.getRole())));
+
         return appUser;
     }
 
-    private AppUser saveUser(OAuth2User oAuth2User) {
-        return appUserRepository.save(AppUser.builder()
+    private AppUser createUser(OAuth2User oAuth2User, String provider) {
+        AppUser.AppUserBuilder builder = AppUser.builder()
                 .id(oAuth2User.getName())
-                .username(oAuth2User.getAttributes().get("login").toString())
-                .avatarUrl(oAuth2User.getAttributes().get("avatar_url").toString())
                 .customerIds(new ArrayList<>())
                 .role(AppUserRoles.USER)
-                .build()
-        );
+                .attributes(oAuth2User.getAttributes());
+
+        if ("github".equals(provider)) {
+            builder.username(oAuth2User.getAttribute("login"))
+                    .avatarUrl(oAuth2User.getAttribute("avatar_url"));
+        } else if ("google".equals(provider)) {
+            builder.username(oAuth2User.getAttribute("email"))
+                    .avatarUrl(oAuth2User.getAttribute("picture"));
+        }
+
+        return appUserRepository.save(builder.build());
     }
 
 }
