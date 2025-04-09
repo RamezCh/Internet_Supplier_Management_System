@@ -7,6 +7,8 @@ import com.github.ramezch.backend.appuser.AppUserRoles;
 import com.github.ramezch.backend.customers.models.Customer;
 import com.github.ramezch.backend.customers.models.CustomerStatus;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
+import com.github.ramezch.backend.internetplan.models.InternetPlan;
+import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.utils.IdService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,8 @@ class CustomerIntegrationTest {
     private AppUserRepository appUserRepo;
     @Autowired
     private IdService idService;
+    @Autowired
+    private InternetPlanRepository internetPlanRepo;
 
     private Customer newCustomer;
     private final String baseURL = "/api/customers";
@@ -51,6 +55,8 @@ class CustomerIntegrationTest {
         newCustomer = new Customer("123","new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
         testUser = new AppUser("123", "test_user", "w.com", new ArrayList<>(List.of("123")),new ArrayList<>(List.of("")), AppUserRoles.USER, Map.of(), List.of(new SimpleGrantedAuthority(AppUserRoles.USER.toString())));
         appUserRepo.save(testUser);
+        InternetPlan internetPlan = new InternetPlan("1", "basic", "100Mbps", 75, "unlimited", true);
+        internetPlanRepo.save(internetPlan);
     }
 
     @Test
@@ -138,6 +144,7 @@ class CustomerIntegrationTest {
         mvc.perform(post(baseURL)
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param("internetPlanId", "1")
                         .content("""
                                 {
                                     "username": "new_customer",
@@ -179,6 +186,7 @@ class CustomerIntegrationTest {
         mvc.perform(post(baseURL)
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param("internetPlanId", "1")
                         .content("""
                                 {
                                     "username": "",
@@ -329,6 +337,7 @@ class CustomerIntegrationTest {
         mvc.perform(post(baseURL)
                         .with(oauth2Login().oauth2User(testUser))
                         .contentType(MediaType.APPLICATION_JSON)
+                        .param("internetPlanId", "1")
                         .content("""
                                 {
                                     "username": "new_customer",

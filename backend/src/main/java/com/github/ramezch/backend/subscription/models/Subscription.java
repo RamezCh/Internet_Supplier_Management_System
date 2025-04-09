@@ -2,7 +2,6 @@ package com.github.ramezch.backend.subscription.models;
 
 import com.github.ramezch.backend.customers.models.Customer;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
@@ -15,8 +14,7 @@ public record Subscription(
         @NotNull InternetPlan internetPlan,
         @NotNull Instant startDate,
         @FutureOrPresent Instant endDate,
-        @NotNull SubscriptionStatus status,
-        @Nullable String notes
+        @NotNull SubscriptionStatus status
 ) {
     public boolean isExpiringSoon() {
         return status == SubscriptionStatus.ACTIVE

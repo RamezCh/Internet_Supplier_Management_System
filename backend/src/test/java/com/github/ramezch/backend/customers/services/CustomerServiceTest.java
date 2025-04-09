@@ -6,6 +6,9 @@ import com.github.ramezch.backend.appuser.AppUserRepository;
 import com.github.ramezch.backend.customers.models.*;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.exceptions.*;
+import com.github.ramezch.backend.internetplan.models.InternetPlan;
+import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
+import com.github.ramezch.backend.subscription.services.SubscriptionService;
 import com.github.ramezch.backend.utils.IdService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,24 +22,29 @@ import static org.mockito.Mockito.*;
 class CustomerServiceTest {
     private CustomerRepository customerRepo;
     private AppUserRepository appUserRepo;
+    private InternetPlanRepository internetPlanRepo;
     private IdService idService;
     private CustomerService service;
     private Customer customer1, customer2;
     private CustomerDTO customerDTO1;
     private AppUser mockUser;
+    private InternetPlan internetPlan;
     private final Address address = new Address("addr1", "Deutschland", "Berlin", "BeispielStrasse", "10000");
 
     @BeforeEach
     void setup() {
         customerRepo = mock(CustomerRepository.class);
         appUserRepo = mock(AppUserRepository.class);
+        internetPlanRepo = mock(InternetPlanRepository.class);
+        SubscriptionService subscriptionService = mock(SubscriptionService.class);
         idService = mock(IdService.class);
-        service = new CustomerService(customerRepo, appUserRepo, idService);
+        service = new CustomerService(customerRepo, appUserRepo, idService, subscriptionService);
 
         Instant now = Instant.now();
         customer1 = new Customer("123", "new_customer", "New Customer", "78863120", address, now, CustomerStatus.PENDING_ACTIVATION, "test");
         customer2 = new Customer("234", "new_customer2", "New Customer 2", "78863121", address, now, CustomerStatus.PENDING_ACTIVATION, "test2");
         customerDTO1 = new CustomerDTO("new_customer", "New Customer", "78863120", address, CustomerStatus.PENDING_ACTIVATION, "test");
+        internetPlan = new InternetPlan("1", "basic", "100Mbps", 75, "unlimited", true);
 
         mockUser = new AppUser();
         String userId = "user123";
@@ -94,8 +102,9 @@ class CustomerServiceTest {
         mockUser.setCustomerIds(new ArrayList<>());
         when(idService.randomId()).thenReturn("123");
         when(customerRepo.save(any())).thenReturn(customer1);
+        when(internetPlanRepo.findById("1")).thenReturn(Optional.ofNullable(internetPlan));
 
-        Customer actual = service.addCustomer(customerDTO1, mockUser);
+        Customer actual = service.addCustomer(customerDTO1, mockUser, "1");
 
         verify(customerRepo).save(any());
         verify(appUserRepo).save(mockUser);
@@ -108,7 +117,7 @@ class CustomerServiceTest {
         mockUser.setCustomerIds(List.of("123"));
         when(customerRepo.existsByUsernameAndIdIn(anyString(), anyList())).thenReturn(true);
 
-        assertThrows(UsernameTakenException.class, () -> service.addCustomer(customerDTO1, mockUser));
+        assertThrows(UsernameTakenException.class, () -> service.addCustomer(customerDTO1, mockUser, "1"));
         verify(customerRepo, never()).save(any());
     }
 
@@ -117,8 +126,9 @@ class CustomerServiceTest {
         mockUser.setCustomerIds(null);
         when(idService.randomId()).thenReturn("123");
         when(customerRepo.save(any())).thenReturn(customer1);
+        when(internetPlanRepo.findById("1")).thenReturn(Optional.ofNullable(internetPlan));
 
-        Customer actual = service.addCustomer(customerDTO1, mockUser);
+        Customer actual = service.addCustomer(customerDTO1, mockUser, "1");
 
         assertNotNull(mockUser.getCustomerIds());
         assertTrue(mockUser.getCustomerIds().contains(actual.id()));
