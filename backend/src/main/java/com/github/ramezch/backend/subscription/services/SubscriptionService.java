@@ -1,8 +1,7 @@
 package com.github.ramezch.backend.subscription.services;
 
-import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.exceptions.CustomerSubscriptionNotFoundException;
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
-import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.subscription.models.Subscription;
 import com.github.ramezch.backend.subscription.models.SubscriptionStatus;
@@ -22,8 +21,8 @@ public class SubscriptionService {
     private final InternetPlanRepository internetPlanRepo;
     private final IdService idService;
 
-    public void createSubscription(Customer customer, String internetPlanId) {
-        InternetPlan plan = internetPlanRepo.findById(internetPlanId)
+    public void createSubscription(String customerId, String internetPlanId) {
+        internetPlanRepo.findById(internetPlanId)
                 .orElseThrow(() -> new InternetPlanNotFoundException(internetPlanId));
 
         Instant startDate = Instant.now();
@@ -31,13 +30,19 @@ public class SubscriptionService {
 
         Subscription subscription = new Subscription(
                 idService.randomId(),
-                customer,
-                plan,
+                customerId,
+                internetPlanId,
                 startDate,
                 endDate,
                 SubscriptionStatus.ACTIVE
         );
 
         subscriptionRepo.save(subscription);
+    }
+
+    public void deleteSubscription(String customerId) {
+        Subscription toDelete = subscriptionRepo.findByCustomerId(customerId)
+                .orElseThrow(() -> new CustomerSubscriptionNotFoundException(customerId));
+        subscriptionRepo.delete(toDelete);
     }
 }

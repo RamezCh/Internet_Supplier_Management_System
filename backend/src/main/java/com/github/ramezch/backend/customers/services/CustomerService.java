@@ -95,7 +95,7 @@ public class CustomerService {
 
         Customer savedCustomer = customerRepo.save(newCustomer);
 
-        subscriptionService.createSubscription(savedCustomer, internetPlanId);
+        subscriptionService.createSubscription(newCustomerID, internetPlanId);
 
         customerIds.add(newCustomerID);
         appUser.setCustomerIds(customerIds);
@@ -120,6 +120,8 @@ public class CustomerService {
 
         customerIds.remove(id);
         appUser.setCustomerIds(customerIds);
+
+        subscriptionService.deleteSubscription(id);
 
         appUserRepository.save(appUser);
 
