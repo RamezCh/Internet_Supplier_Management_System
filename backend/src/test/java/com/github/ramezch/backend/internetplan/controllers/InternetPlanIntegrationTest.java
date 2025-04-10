@@ -277,4 +277,133 @@ class InternetPlanIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Internet plan with id: 'nonexistent' not found."));
     }
+
+    @Test
+    @DirtiesContext
+    void getActivePlansByUser_whenActivePlansExist_returnActivePlans() throws Exception {
+        // GIVEN
+        testUser.setInternetPlanIds(List.of("plan123"));
+        appUserRepo.save(testUser);
+        repo.save(testPlan);
+
+        // WHEN & THEN
+        mvc.perform(get(baseURL + "/small")
+                        .with(oauth2Login().oauth2User(testUser)))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+            [{
+                "id": "plan123",
+                "name": "Premium Plan"
+            }]
+        """));
+    }
+
+    @Test
+    @DirtiesContext
+    void getActivePlansByUser_whenNoActivePlans_returnEmptyList() throws Exception {
+        // GIVEN
+        InternetPlan inactivePlan = new InternetPlan(
+                "plan456",
+                "Inactive Plan",
+                "500Mbps",
+                79.99,
+                "1TB",
+                false
+        );
+        testUser.setInternetPlanIds(List.of("plan456"));
+        appUserRepo.save(testUser);
+        repo.save(inactivePlan);
+
+        // WHEN & THEN
+        mvc.perform(get(baseURL + "/small")
+                        .with(oauth2Login().oauth2User(testUser)))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    @DirtiesContext
+    void getActivePlansByUser_whenNoPlans_returnEmptyList() throws Exception {
+        // WHEN & THEN
+        mvc.perform(get(baseURL + "/small")
+                        .with(oauth2Login().oauth2User(testUser)))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
+    @DirtiesContext
+    void updateInternetPlan_whenNameExists_returnConflict() throws Exception {
+        // GIVEN
+        InternetPlan existingPlan = new InternetPlan(
+                "plan456",
+                "Existing Plan",
+                "500Mbps",
+                79.99,
+                "1TB",
+                true
+        );
+        testUser.setInternetPlanIds(List.of("plan123", "plan456"));
+        appUserRepo.save(testUser);
+        repo.save(testPlan);
+        repo.save(existingPlan);
+
+        // WHEN & THEN
+        mvc.perform(put(baseURL + "/plan123")
+                        .with(oauth2Login().oauth2User(testUser))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                {
+                    "name": "Existing Plan",
+                    "speed": "500Mbps",
+                    "price": 79.99,
+                    "bandwidth": "1TB",
+                    "isActive": true
+                }
+            """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Internet plan name 'Existing Plan' is already taken."));
+    }
+
+    @Test
+    @DirtiesContext
+    void addInternetPlan_whenUnauthorized_returnUnauthorized() throws Exception {
+        // WHEN & THEN
+        mvc.perform(post(baseURL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                {
+                    "name": "Basic Plan",
+                    "speed": "100Mbps",
+                    "price": 49.99,
+                    "bandwidth": "500GB",
+                    "isActive": true
+                }
+            """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DirtiesContext
+    void updateInternetPlan_whenInvalidData_returnBadRequest() throws Exception {
+        // GIVEN
+        testUser.setInternetPlanIds(List.of("plan123"));
+        appUserRepo.save(testUser);
+        repo.save(testPlan);
+
+        // WHEN & THEN
+        mvc.perform(put(baseURL + "/plan123")
+                        .with(oauth2Login().oauth2User(testUser))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                {
+                    "name": "",
+                    "speed": "",
+                    "price": -1,
+                    "bandwidth": "",
+                    "isActive": true
+                }
+            """))
+                .andExpect(status().isBadRequest());
+    }
 }

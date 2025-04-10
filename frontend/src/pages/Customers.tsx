@@ -2,7 +2,7 @@ import { KeyboardEvent, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaChevronLeft, FaChevronRight, FaColumns } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaColumns, FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 import { Customer } from "../types.ts";
 import { CustomerCard } from "../components/CustomerCard.tsx";
@@ -22,6 +22,12 @@ interface ApiResponse {
     last: boolean;
 }
 
+interface ApiParams {
+    page: number;
+    size: number;
+    sort?: string;
+}
+
 interface ColumnVisibility {
     username: boolean;
     fullName: boolean;
@@ -30,6 +36,13 @@ interface ColumnVisibility {
     status: boolean;
     registrationDate: boolean;
     notes: boolean;
+}
+
+type SortDirection = 'asc' | 'desc' | 'none';
+
+interface StatusOption {
+    value: string;
+    label: string;
 }
 
 export const Customers = () => {
@@ -50,8 +63,9 @@ export const Customers = () => {
         registrationDate: true,
         notes: true,
     });
+    const [sortDirection, setSortDirection] = useState<SortDirection>('none');
 
-    const statusOptions = [
+    const statusOptions: StatusOption[] = [
         { value: "", label: "All" },
         { value: "ACTIVE", label: "Active" },
         { value: "EXPIRING", label: "Expiring" },
@@ -60,17 +74,21 @@ export const Customers = () => {
         { value: "PENDING_ACTIVATION", label: "Pending Activation" },
     ];
 
-    const pageSizeOptions = [5, 10, 15, 20];
+    const pageSizeOptions: number[] = [5, 10, 15, 20];
 
     const getCustomers = async (page: number = currentPage, size: number = pageSize) => {
         setIsLoading(true);
         try {
-            const response = await axios.get<ApiResponse>("/api/customers", {
-                params: {
-                    page,
-                    size,
-                },
-            });
+            const params: ApiParams = {
+                page,
+                size,
+            };
+
+            if (sortDirection !== 'none') {
+                params.sort = `registrationDate,${sortDirection}`;
+            }
+
+            const response = await axios.get<ApiResponse>("/api/customers", { params });
             setCustomers(response.data.content);
             setTotalPages(response.data.totalPages);
         } catch (error) {
@@ -97,6 +115,10 @@ export const Customers = () => {
                 params.append("status", status);
             }
 
+            if (sortDirection !== 'none') {
+                params.append("sort", `registrationDate,${sortDirection}`);
+            }
+
             const response = await axios.get<ApiResponse>(
                 `/api/customers/search?${params.toString()}`
             );
@@ -111,9 +133,30 @@ export const Customers = () => {
         }
     };
 
+    const getNextSortDirection = (current: SortDirection): SortDirection => {
+        const order: Record<SortDirection, SortDirection> = {
+            'none': 'desc',
+            'desc': 'asc',
+            'asc': 'none'
+        };
+        return order[current];
+    };
+
+    const toggleSort = () => {
+        const newDirection = getNextSortDirection(sortDirection);
+        setSortDirection(newDirection);
+
+        if (searchQuery || status) {
+            searchCustomers(0);
+        } else {
+            getCustomers(0);
+        }
+    };
+
     const resetFilters = () => {
         setSearchQuery("");
         setStatus("");
+        setSortDirection('none');
         getCustomers(0);
     };
 
@@ -166,6 +209,14 @@ export const Customers = () => {
         getCustomers();
     }, []);
 
+    const getSortIcon = () => {
+        switch (sortDirection) {
+            case 'asc': return <FaSortUp className="ml-1" />;
+            case 'desc': return <FaSortDown className="ml-1" />;
+            default: return <FaSort className="ml-1 opacity-30" />;
+        }
+    };
+
     return (
         <div className="flex flex-col gap-4 p-4 max-w-full">
             <div className="flex flex-col sm:flex-row items-center mb-5 gap-4 w-full">
@@ -199,7 +250,7 @@ export const Customers = () => {
                     <Button
                         onClick={resetFilters}
                         variant="red"
-                        disabled={isLoading || (!searchQuery && !status)}
+                        disabled={isLoading || (!searchQuery && !status && sortDirection === 'none')}
                         className="w-full sm:w-auto"
                     >
                         Reset
@@ -207,6 +258,17 @@ export const Customers = () => {
                 </div>
 
                 <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-normal">
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={toggleSort}
+                            variant="secondary"
+                            className="h-[42px] flex items-center"
+                        >
+                            Sort by Date
+                            {getSortIcon()}
+                        </Button>
+                    </div>
+
                     <div className="relative w-full sm:w-auto">
                         <Button
                             onClick={() => setShowColumnMenu(!showColumnMenu)}

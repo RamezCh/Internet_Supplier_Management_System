@@ -6,6 +6,7 @@ import com.github.ramezch.backend.exceptions.InternetPlanNameTakenException;
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.models.InternetPlanDTO;
+import com.github.ramezch.backend.internetplan.models.InternetPlanSmallDTO;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.utils.IdService;
 import org.junit.jupiter.api.BeforeEach;
@@ -186,4 +187,95 @@ class InternetPlanServiceTest {
         verify(internetPlanRepo, never()).deleteById(any());
         verify(appUserRepo, never()).save(any());
     }
+
+    @Test
+    void getActivePlansByAppUser_shouldReturnActivePlans_whenUserHasActivePlans() {
+        // GIVEN
+        List<String> planIds = List.of("1", "2", "3");
+        mockUser.setInternetPlanIds(planIds);
+        List<InternetPlan> activePlans = List.of(internetPlan1, internetPlan2);
+
+        // WHEN
+        when(internetPlanRepo.findByIdInAndIsActive(planIds, true)).thenReturn(activePlans);
+        List<InternetPlanSmallDTO> result = internetPlanService.getActivePlansByAppUser(mockUser);
+
+        // THEN
+        assertEquals(2, result.size());
+        assertThat(result).extracting(InternetPlanSmallDTO::name)
+                .containsExactlyInAnyOrder("basic", "premium");
+        verify(internetPlanRepo).findByIdInAndIsActive(planIds, true);
+    }
+
+    @Test
+    void getActivePlansByAppUser_shouldReturnEmptyList_whenUserHasNoActivePlans() {
+        // GIVEN
+        List<String> planIds = List.of("3");
+        mockUser.setInternetPlanIds(planIds);
+
+        // WHEN
+        when(internetPlanRepo.findByIdInAndIsActive(planIds, true)).thenReturn(List.of());
+        List<InternetPlanSmallDTO> result = internetPlanService.getActivePlansByAppUser(mockUser);
+
+        // THEN
+        assertTrue(result.isEmpty());
+        verify(internetPlanRepo).findByIdInAndIsActive(planIds, true);
+    }
+
+    @Test
+    void getActivePlansByAppUser_shouldReturnEmptyList_whenUserHasNoPlans() {
+        // GIVEN
+        mockUser.setInternetPlanIds(null);
+
+        // WHEN
+        List<InternetPlanSmallDTO> result = internetPlanService.getActivePlansByAppUser(mockUser);
+
+        // THEN
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(internetPlanRepo);
+    }
+
+    @Test
+    void getActivePlansByAppUser_shouldReturnEmptyList_whenUserHasEmptyPlanList() {
+        // GIVEN
+        mockUser.setInternetPlanIds(List.of());
+
+        // WHEN
+        List<InternetPlanSmallDTO> result = internetPlanService.getActivePlansByAppUser(mockUser);
+
+        // THEN
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(internetPlanRepo);
+    }
+
+    @Test
+    void updateInternetPlan_shouldThrowException_whenNameExistsForOtherPlan() {
+        // GIVEN
+        List<String> planIds = List.of("1", "2");
+        mockUser.setInternetPlanIds(planIds);
+        when(internetPlanRepo.existsByNameAndIdIn("premium", planIds)).thenReturn(true);
+
+        // WHEN & THEN
+        assertThrows(InternetPlanNameTakenException.class,
+                () -> internetPlanService.updateInternetPlan("1", internetPlanDTO1, mockUser));
+
+        verify(internetPlanRepo, never()).save(any());
+    }
+
+    @Test
+    void updateInternetPlan_shouldAllowSameNameForSamePlan() {
+        // GIVEN
+        List<String> planIds = List.of("1");
+        mockUser.setInternetPlanIds(planIds);
+        when(internetPlanRepo.existsByNameAndIdIn("basic", planIds)).thenReturn(false);
+        when(internetPlanRepo.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // WHEN
+        InternetPlan result = internetPlanService.updateInternetPlan("1", internetPlanDTO2, mockUser);
+
+        // THEN
+        assertNotNull(result);
+        assertEquals("basic", result.name());
+        verify(internetPlanRepo).save(result);
+    }
+
 }
