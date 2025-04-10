@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +39,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String username;
         String avatarUrl;
 
+        System.out.println(oAuth2User);
+
         if ("github".equals(provider)) {
-            id = String.valueOf(Objects.requireNonNull(oAuth2User.getAttribute("id")));
+            id = oAuth2User.getName();
             username = oAuth2User.getAttribute("login");
             avatarUrl = oAuth2User.getAttribute("avatar_url");
         } else if ("google".equals(provider)) {
