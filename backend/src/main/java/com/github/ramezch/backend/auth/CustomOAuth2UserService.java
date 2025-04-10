@@ -39,8 +39,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String username;
         String avatarUrl;
 
-        System.out.println(oAuth2User);
-
         if ("github".equals(provider)) {
             id = oAuth2User.getName();
             username = oAuth2User.getAttribute("login");
