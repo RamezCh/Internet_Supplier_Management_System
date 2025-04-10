@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -35,21 +36,33 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private AppUser createUser(OAuth2User oAuth2User, String provider) {
-        AppUser.AppUserBuilder builder = AppUser.builder()
-                .id(oAuth2User.getName())
-                .customerIds(new ArrayList<>())
-                .role(AppUserRoles.USER)
-                .attributes(oAuth2User.getAttributes());
+        String id;
+        String username;
+        String avatarUrl;
 
         if ("github".equals(provider)) {
-            builder.username(oAuth2User.getAttribute("login"))
-                    .avatarUrl(oAuth2User.getAttribute("avatar_url"));
+            id = String.valueOf(Objects.requireNonNull(oAuth2User.getAttribute("id")));
+            username = oAuth2User.getAttribute("login");
+            avatarUrl = oAuth2User.getAttribute("avatar_url");
         } else if ("google".equals(provider)) {
-            builder.username(oAuth2User.getAttribute("email"))
-                    .avatarUrl(oAuth2User.getAttribute("picture"));
+            id = oAuth2User.getAttribute("sub");
+            username = oAuth2User.getAttribute("email");
+            avatarUrl = oAuth2User.getAttribute("picture");
+        } else {
+            throw new IllegalArgumentException("Unsupported provider: " + provider);
         }
 
-        return appUserRepository.save(builder.build());
+        AppUser appUser = AppUser.builder()
+                .id(id)
+                .username(username)
+                .avatarUrl(avatarUrl)
+                .customerIds(new ArrayList<>())
+                .internetPlanIds(new ArrayList<>())
+                .role(AppUserRoles.USER)
+                .attributes(oAuth2User.getAttributes())
+                .build();
+
+        return appUserRepository.save(appUser);
     }
 
 }
