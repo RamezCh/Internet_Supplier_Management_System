@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorMessage handleIncorrectArgumentsException(MethodArgumentNotValidException exception) {
-        logger.info("Customer not found: " + exception.getMessage());
+        logger.info("Incorrect Argument, check user input " + exception.getMessage());
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 
@@ -35,6 +35,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorMessage handleInternetPlanNotFoundException(InternetPlanNotFoundException exception) {
         logger.info("Internet Plan not found: " + exception.getMessage());
+        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
+    }
+
+    // Handle CustomerSubscriptionNotFoundException
+    @ExceptionHandler(CustomerSubscriptionNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleCustomerSubscriptionNotFoundException(CustomerSubscriptionNotFoundException exception) {
+        logger.info("The Subscription for the customer with ID: " + exception.getMessage() + " could not be found.");
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 

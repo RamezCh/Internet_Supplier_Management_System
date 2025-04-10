@@ -1,7 +1,4 @@
 package com.github.ramezch.backend.subscription.models;
-
-import com.github.ramezch.backend.customers.models.Customer;
-import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.Id;
@@ -10,8 +7,8 @@ import java.time.Instant;
 
 public record Subscription(
         @Id String id,
-        @NotNull Customer customer,
-        @NotNull InternetPlan internetPlan,
+        @NotNull String customerId,
+        @NotNull String internetPlanId,
         @NotNull Instant startDate,
         @FutureOrPresent Instant endDate,
         @NotNull SubscriptionStatus status
