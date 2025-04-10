@@ -9,6 +9,9 @@ import com.github.ramezch.backend.customers.models.CustomerStatus;
 import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
+import com.github.ramezch.backend.subscription.models.Subscription;
+import com.github.ramezch.backend.subscription.models.SubscriptionStatus;
+import com.github.ramezch.backend.subscription.repository.SubscriptionRepository;
 import com.github.ramezch.backend.utils.IdService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +46,8 @@ class CustomerIntegrationTest {
     private IdService idService;
     @Autowired
     private InternetPlanRepository internetPlanRepo;
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
 
     private Customer newCustomer;
     private final String baseURL = "/api/customers";
@@ -288,6 +293,10 @@ class CustomerIntegrationTest {
     void deleteCustomer_whenExist_returnNoContent() throws Exception {
         // GIVEN
         repo.save(newCustomer);
+        Instant startDate = Instant.now();
+        Instant endDate = Instant.now();
+        Subscription newCustomerSub = new Subscription("23456", "123", "1", startDate, endDate, SubscriptionStatus.ACTIVE);
+        subscriptionRepository.save(newCustomerSub);
         // WHEN
         mvc.perform(delete(baseURL + "/123")
                         .with(oauth2Login().oauth2User(testUser))
