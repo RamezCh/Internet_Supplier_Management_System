@@ -80,11 +80,8 @@ public class GlobalExceptionHandler {
     public ErrorMessage handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         String errorMessage = "Invalid request data";
 
-        if (ex.getCause() instanceof InvalidFormatException ife) {
-            if (ife.getTargetType() != null && ife.getTargetType().isEnum()) {
-                errorMessage = "Invalid status value. Allowed values: " +
-                        Arrays.toString(SubscriptionStatus.values());
-            }
+        if (ex.getCause() instanceof InvalidFormatException ife && ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+            errorMessage = "Invalid status value. Allowed values: " + Arrays.toString(SubscriptionStatus.values());
         }
         return new ErrorMessage(errorMessage, LocalDateTime.now());
     }
