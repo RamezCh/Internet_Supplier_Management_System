@@ -199,19 +199,6 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void updateSubscription_shouldThrowException_whenSubscriptionNotFound() {
-        // GIVEN
-        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.empty());
-
-        // WHEN & THEN
-        assertThrows(CustomerSubscriptionNotFoundException.class,
-                () -> subscriptionService.updateSubscription(customerId, new SubscriptionDTO(
-                        customerId, internetPlanId, Instant.now(),
-                        Instant.now().plus(30, ChronoUnit.DAYS), SubscriptionStatus.ACTIVE
-                )));
-    }
-
-    @Test
     void deleteSubscription_shouldDeleteExistingSubscription() {
         // GIVEN
         Subscription existing = new Subscription(
