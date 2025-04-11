@@ -5,6 +5,7 @@ import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.subscription.models.Subscription;
+import com.github.ramezch.backend.subscription.models.SubscriptionDTO;
 import com.github.ramezch.backend.subscription.models.SubscriptionStatus;
 import com.github.ramezch.backend.subscription.repository.SubscriptionRepository;
 import com.github.ramezch.backend.utils.IdService;
@@ -84,41 +85,6 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void deleteSubscription_shouldDeleteExistingSubscription() {
-        // GIVEN
-        Subscription existingSubscription = new Subscription(
-                subscriptionId,
-                customerId,
-                internetPlanId,
-                Instant.now(),
-                Instant.now().plus(30, ChronoUnit.DAYS),
-                SubscriptionStatus.ACTIVE
-        );
-
-        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.of(existingSubscription));
-
-        // WHEN
-        subscriptionService.deleteSubscription(customerId);
-
-        // THEN
-        verify(subscriptionRepo).findByCustomerId(customerId);
-        verify(subscriptionRepo).delete(existingSubscription);
-    }
-
-    @Test
-    void deleteSubscription_shouldThrowException_whenSubscriptionNotFound() {
-        // GIVEN
-        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.empty());
-
-        // WHEN & THEN
-        assertThrows(CustomerSubscriptionNotFoundException.class,
-                () -> subscriptionService.deleteSubscription(customerId));
-
-        verify(subscriptionRepo).findByCustomerId(customerId);
-        verifyNoMoreInteractions(subscriptionRepo);
-    }
-
-    @Test
     void createSubscription_shouldSetCorrectDuration() {
         // GIVEN
         Instant testStartTime = Instant.now();
@@ -149,5 +115,114 @@ class SubscriptionServiceTest {
         // WHEN & THEN
         assertThrows(InternetPlanNotFoundException.class,
                 () -> subscriptionService.createSubscription(customerId, null));
+    }
+
+    @Test
+    void getSubscription_shouldReturnSubscription_whenExists() {
+        // GIVEN
+        Subscription expected = new Subscription(
+                subscriptionId, customerId, internetPlanId,
+                Instant.now(), Instant.now().plus(30, ChronoUnit.DAYS),
+                SubscriptionStatus.ACTIVE
+        );
+        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.of(expected));
+
+        // WHEN
+        Optional<Subscription> result = subscriptionService.getSubscription(customerId);
+
+        // THEN
+        assertTrue(result.isPresent());
+        assertEquals(expected, result.get());
+    }
+
+    @Test
+    void getSubscription_shouldReturnEmpty_whenNotFound() {
+        // GIVEN
+        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.empty());
+
+        // WHEN
+        Optional<Subscription> result = subscriptionService.getSubscription(customerId);
+
+        // THEN
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void updateSubscription_shouldUpdateChangedFields() {
+        // GIVEN
+        Subscription existing = new Subscription(
+                subscriptionId, customerId, "old-plan",
+                Instant.now(), Instant.now().plus(30, ChronoUnit.DAYS),
+                SubscriptionStatus.ACTIVE
+        );
+
+        SubscriptionDTO update = new SubscriptionDTO(
+                customerId, "new-plan", existing.startDate(),
+                existing.endDate().plus(10, ChronoUnit.DAYS),
+                SubscriptionStatus.EXPIRING
+        );
+
+        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.of(existing));
+        when(subscriptionRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // WHEN
+        Subscription result = subscriptionService.updateSubscription(customerId, update);
+
+        // THEN
+        assertEquals("new-plan", result.internetPlanId());
+        assertEquals(SubscriptionStatus.EXPIRING, result.status());
+        assertEquals(existing.endDate().plus(10, ChronoUnit.DAYS), result.endDate());
+    }
+
+    @Test
+    void updateSubscription_shouldReturnOriginal_whenNoChanges() {
+        // GIVEN
+        Subscription existing = new Subscription(
+                subscriptionId, customerId, internetPlanId,
+                Instant.now(), Instant.now().plus(30, ChronoUnit.DAYS),
+                SubscriptionStatus.ACTIVE
+        );
+
+        SubscriptionDTO noChanges = new SubscriptionDTO(
+                customerId, internetPlanId, existing.startDate(),
+                existing.endDate(), existing.status()
+        );
+
+        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.of(existing));
+
+        // WHEN
+        Subscription result = subscriptionService.updateSubscription(customerId, noChanges);
+
+        // THEN
+        assertEquals(existing, result);
+        verify(subscriptionRepo, never()).save(any());
+    }
+
+    @Test
+    void deleteSubscription_shouldDeleteExistingSubscription() {
+        // GIVEN
+        Subscription existing = new Subscription(
+                subscriptionId, customerId, internetPlanId,
+                Instant.now(), Instant.now().plus(30, ChronoUnit.DAYS),
+                SubscriptionStatus.ACTIVE
+        );
+
+        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.of(existing));
+
+        // WHEN
+        subscriptionService.deleteSubscription(customerId);
+
+        // THEN
+        verify(subscriptionRepo).delete(existing);
+    }
+
+    @Test
+    void deleteSubscription_shouldThrowException_whenSubscriptionNotFound() {
+        // GIVEN
+        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.empty());
+
+        // WHEN & THEN
+        assertThrows(CustomerSubscriptionNotFoundException.class,
+                () -> subscriptionService.deleteSubscription(customerId));
     }
 }

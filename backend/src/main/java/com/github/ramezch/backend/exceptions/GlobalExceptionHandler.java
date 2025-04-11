@@ -1,12 +1,16 @@
 package com.github.ramezch.backend.exceptions;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.github.ramezch.backend.subscription.models.SubscriptionStatus;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 @RestControllerAdvice
@@ -69,5 +73,16 @@ public class GlobalExceptionHandler {
         // exception.printStackTrace(); shows everything that happened
         logger.severe("Unhandled exception occurred: " + exception.getMessage());
         return new ErrorMessage("An unexpected error occurred. Please try again later.", LocalDateTime.now());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        String errorMessage = "Invalid request data";
+
+        if (ex.getCause() instanceof InvalidFormatException ife && ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+            errorMessage = "Invalid status value. Allowed values: " + Arrays.toString(SubscriptionStatus.values());
+        }
+        return new ErrorMessage(errorMessage, LocalDateTime.now());
     }
 }
