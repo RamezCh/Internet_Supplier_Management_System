@@ -1,11 +1,16 @@
 package com.github.ramezch.backend.subscription.services;
 
+import com.github.ramezch.backend.customers.models.Address;
+import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.models.CustomerStatus;
+import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.exceptions.CustomerSubscriptionNotFoundException;
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.subscription.models.Subscription;
 import com.github.ramezch.backend.subscription.models.SubscriptionDTO;
+import com.github.ramezch.backend.subscription.models.SubscriptionDetailsDTO;
 import com.github.ramezch.backend.subscription.models.SubscriptionStatus;
 import com.github.ramezch.backend.subscription.repository.SubscriptionRepository;
 import com.github.ramezch.backend.utils.IdService;
@@ -29,6 +34,8 @@ class SubscriptionServiceTest {
     private SubscriptionRepository subscriptionRepo;
     @Mock
     private InternetPlanRepository internetPlanRepo;
+    @Mock
+    private CustomerRepository customerRepo;
     @Mock
     private IdService idService;
     @InjectMocks
@@ -118,21 +125,38 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void getSubscription_shouldReturnSubscription_whenExists() {
+    void getSubscription_shouldReturnSubscriptionDetails_whenExists() {
         // GIVEN
-        Subscription expected = new Subscription(
+        Instant now = Instant.now();
+        Address address = new Address("123 Main St", "Springfield", "IL", "62704", "USA");
+        Customer customer = new Customer(customerId, "username", "John Doe", "123456789", address, now, CustomerStatus.ACTIVE, "email@test.com");
+        Subscription subscription = new Subscription(
                 subscriptionId, customerId, internetPlanId,
-                Instant.now(), Instant.now().plus(30, ChronoUnit.DAYS),
+                now, now.plus(30, ChronoUnit.DAYS),
                 SubscriptionStatus.ACTIVE
         );
-        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.of(expected));
+        SubscriptionDetailsDTO expected = new SubscriptionDetailsDTO(
+                subscriptionId,
+                customer,
+                basicPlan,
+                now,
+                now.plus(30, ChronoUnit.DAYS),
+                SubscriptionStatus.ACTIVE
+        );
+
+        when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.of(subscription));
+        when(internetPlanRepo.findById(internetPlanId)).thenReturn(Optional.of(basicPlan));
+        when(customerRepo.findById(customerId)).thenReturn(Optional.of(customer));
 
         // WHEN
-        Optional<Subscription> result = subscriptionService.getSubscription(customerId);
+        Optional<SubscriptionDetailsDTO> result = subscriptionService.getSubscription(customerId);
 
         // THEN
         assertTrue(result.isPresent());
         assertEquals(expected, result.get());
+        verify(subscriptionRepo).findByCustomerId(customerId);
+        verify(internetPlanRepo).findById(internetPlanId);
+        verify(customerRepo).findById(customerId);
     }
 
     @Test
@@ -141,10 +165,12 @@ class SubscriptionServiceTest {
         when(subscriptionRepo.findByCustomerId(customerId)).thenReturn(Optional.empty());
 
         // WHEN
-        Optional<Subscription> result = subscriptionService.getSubscription(customerId);
+        Optional<SubscriptionDetailsDTO> result = subscriptionService.getSubscription(customerId);
 
         // THEN
         assertTrue(result.isEmpty());
+        verify(subscriptionRepo).findByCustomerId(customerId);
+        verifyNoInteractions(internetPlanRepo, customerRepo);
     }
 
     @Test

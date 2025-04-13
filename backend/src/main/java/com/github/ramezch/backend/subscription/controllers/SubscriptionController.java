@@ -5,6 +5,7 @@ import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import com.github.ramezch.backend.exceptions.CustomerSubscriptionNotFoundException;
 import com.github.ramezch.backend.subscription.models.Subscription;
 import com.github.ramezch.backend.subscription.models.SubscriptionDTO;
+import com.github.ramezch.backend.subscription.models.SubscriptionDetailsDTO;
 import com.github.ramezch.backend.subscription.services.SubscriptionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class SubscriptionController {
     private final SubscriptionService subscriptionService;
 
     @GetMapping("{customerId}")
-    public Subscription getSubscription(@PathVariable String customerId, @AuthenticationPrincipal AppUser appUser) {
+    public SubscriptionDetailsDTO getSubscription(@PathVariable String customerId, @AuthenticationPrincipal AppUser appUser) {
         if (!appUser.getCustomerIds().contains(customerId)) {
             throw new CustomerNotFoundException(customerId);
         }

@@ -1,5 +1,5 @@
 import { Customer } from "../types";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import {FaEdit, FaReceipt, FaTrash} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 interface CustomerCardProps {
@@ -23,6 +23,10 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
         navigate(`/customer/${customer.id}/edit`);
     };
 
+    const handleViewSubscription = () => {
+        navigate(`/customer/subscription/${customer.id}`);
+    };
+
     const formatAddress = () => {
         const { country, city, street, postalCode } = customer.address;
         const parts = [country, city, street, postalCode].filter(Boolean);
@@ -43,7 +47,7 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
 
     return (
         <div className="flex justify-between items-start w-full p-4 border border-gray-200 rounded-lg mb-3 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
-            <div className="flex flex-wrap gap-6 flex-grow">
+            <div className="flex flex-wrap gap-4 flex-grow">
                 {/* Always visible columns */}
                 <div className="flex gap-2 items-center min-w-[200px]">
                     <span className="font-medium text-gray-600">Username:</span>
@@ -104,8 +108,15 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
 
             <div className="flex gap-3 ml-4">
                 <button
-                    onClick={handleEdit}
+                    onClick={handleViewSubscription}
                     className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors duration-200"
+                    aria-label="View Subscription"
+                >
+                    <FaReceipt className="w-5 h-5" />
+                </button>
+                <button
+                    onClick={handleEdit}
+                    className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors duration-200"
                     aria-label="Edit customer"
                 >
                     <FaEdit className="w-5 h-5" />
