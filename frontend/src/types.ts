@@ -80,3 +80,21 @@ export interface InternetPlanSmallDTO {
     name: string;
 }
 
+export type SubscriptionStatus = 'ACTIVE' | 'EXPIRING' | 'EXPIRED' | 'CANCELLED';
+
+export interface SubscriptionDetailsDTO {
+    id: string;
+    customer: Customer;
+    internetPlan: InternetPlan;
+    startDate: string;
+    endDate: string;
+    status: SubscriptionStatus;
+}
+
+export interface SubscriptionDTO {
+    customerId: string;
+    internetPlanId: string;
+    startDate: string;
+    endDate: string;
+    status: SubscriptionStatus;
+}

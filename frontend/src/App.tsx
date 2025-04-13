@@ -43,7 +43,7 @@ function App() {
                 <Route path="/internet-plans" element={<InternetPlans/>} />
                 <Route path="/internet-plan/add" element={<AddInternetPlan/>} />
                 <Route path="/internet-plan/:id/edit" element={<EditInternetPlan/>} />
-                <Route path="/customer/subscription/:id" element={<CustomerSubscription/>} />
+                <Route path="/customer/subscription/:customerId" element={<CustomerSubscription/>} />
               </Route>
                 <Route path="/*" element={<PageNotFound/>} />
             </Routes>

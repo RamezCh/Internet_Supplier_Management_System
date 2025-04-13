@@ -116,7 +116,7 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
                 </button>
                 <button
                     onClick={handleEdit}
-                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors duration-200"
+                    className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors duration-200"
                     aria-label="Edit customer"
                 >
                     <FaEdit className="w-5 h-5" />

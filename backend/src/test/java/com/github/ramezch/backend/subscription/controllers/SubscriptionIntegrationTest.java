@@ -3,6 +3,10 @@ package com.github.ramezch.backend.subscription.controllers;
 import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.appuser.AppUserRepository;
 import com.github.ramezch.backend.appuser.AppUserRoles;
+import com.github.ramezch.backend.customers.models.Address;
+import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.models.CustomerStatus;
+import com.github.ramezch.backend.customers.repositories.CustomerRepository;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.subscription.models.Subscription;
@@ -41,6 +45,9 @@ class SubscriptionControllerIntegrationTest {
     private InternetPlanRepository internetPlanRepo;
 
     @Autowired
+    private CustomerRepository customerRepo;
+
+    @Autowired
     private AppUserRepository appUserRepo;
 
     private final String baseURL = "/api/subscriptions";
@@ -71,6 +78,19 @@ class SubscriptionControllerIntegrationTest {
         );
         internetPlanRepo.save(testInternetPlan);
 
+        Address address = new Address("123 Main St", "Springfield", "IL", "62704", "USA");
+        Customer testCustomer = new Customer(
+                "customer123",
+                "test_customer",
+                "Test Customer",
+                "123456789",
+                address,
+                Instant.now(),
+                CustomerStatus.ACTIVE,
+                "test@example.com"
+        );
+        customerRepo.save(testCustomer);
+
         Instant startDate = Instant.now();
         Instant endDate = startDate.plus(30, ChronoUnit.DAYS);
 
@@ -86,7 +106,7 @@ class SubscriptionControllerIntegrationTest {
 
     @Test
     @DirtiesContext
-    void getSubscription_whenExists_returnsSubscription() throws Exception {
+    void getSubscription_whenExists_returnsSubscriptionDetails() throws Exception {
         // GIVEN
         subscriptionRepo.save(testSubscription);
 
@@ -95,9 +115,13 @@ class SubscriptionControllerIntegrationTest {
                         .with(oauth2Login().oauth2User(testUser)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("sub123"))
-                .andExpect(jsonPath("$.customerId").value("customer123"))
-                .andExpect(jsonPath("$.internetPlanId").value("plan123"))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .andExpect(jsonPath("$.customer.id").value("customer123"))
+                .andExpect(jsonPath("$.customer.fullName").value("Test Customer"))
+                .andExpect(jsonPath("$.internetPlan.id").value("plan123"))
+                .andExpect(jsonPath("$.internetPlan.name").value("Premium Plan"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.startDate").exists())
+                .andExpect(jsonPath("$.endDate").exists());
     }
 
     @Test
@@ -112,13 +136,13 @@ class SubscriptionControllerIntegrationTest {
 
     @Test
     @DirtiesContext
-    void getSubscription_whenUnauthorizedCustomer_returnsForbidden() throws Exception {
+    void getSubscription_whenDifferentAppUserCustomer_returnsNotFound() throws Exception {
         // GIVEN
         AppUser otherUser = new AppUser(
                 "user456",
                 "other_user",
                 "other@example.com",
-                List.of("otherCustomer"), // Different customer ID
+                List.of("otherCustomer"),
                 new ArrayList<>(),
                 AppUserRoles.USER,
                 Map.of(),
@@ -130,6 +154,7 @@ class SubscriptionControllerIntegrationTest {
         // WHEN & THEN
         mvc.perform(get(baseURL + "/customer123")
                         .with(oauth2Login().oauth2User(otherUser)))
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("The Customer with username: 'customer123' could not be found."));
     }
 

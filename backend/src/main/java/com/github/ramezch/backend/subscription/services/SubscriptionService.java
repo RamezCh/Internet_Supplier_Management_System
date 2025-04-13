@@ -1,10 +1,15 @@
 package com.github.ramezch.backend.subscription.services;
 
+import com.github.ramezch.backend.customers.models.Customer;
+import com.github.ramezch.backend.customers.repositories.CustomerRepository;
+import com.github.ramezch.backend.exceptions.CustomerNotFoundException;
 import com.github.ramezch.backend.exceptions.CustomerSubscriptionNotFoundException;
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
+import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
 import com.github.ramezch.backend.subscription.models.Subscription;
 import com.github.ramezch.backend.subscription.models.SubscriptionDTO;
+import com.github.ramezch.backend.subscription.models.SubscriptionDetailsDTO;
 import com.github.ramezch.backend.subscription.models.SubscriptionStatus;
 import com.github.ramezch.backend.subscription.repository.SubscriptionRepository;
 import com.github.ramezch.backend.utils.IdService;
@@ -21,6 +26,7 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepo;
     private final InternetPlanRepository internetPlanRepo;
+    private final CustomerRepository customerRepo;
     private final IdService idService;
 
     public void createSubscription(String customerId, String internetPlanId) {
@@ -42,8 +48,24 @@ public class SubscriptionService {
         subscriptionRepo.save(subscription);
     }
 
-    public Optional<Subscription> getSubscription(String customerId) {
-        return subscriptionRepo.findByCustomerId(customerId);
+    public Optional<SubscriptionDetailsDTO> getSubscription(String customerId) {
+        return subscriptionRepo.findByCustomerId(customerId)
+                .map(subscription -> {
+                    InternetPlan internetPlan = internetPlanRepo.findById(subscription.internetPlanId())
+                            .orElseThrow(() -> new InternetPlanNotFoundException(subscription.internetPlanId()));
+
+                    Customer customer = customerRepo.findById(subscription.customerId())
+                            .orElseThrow(() -> new CustomerNotFoundException(subscription.customerId()));
+
+                    return new SubscriptionDetailsDTO(
+                            subscription.id(),
+                            customer,
+                            internetPlan,
+                            subscription.startDate(),
+                            subscription.endDate(),
+                            subscription.status()
+                    );
+                });
     }
 
     public Subscription updateSubscription(String customerId, SubscriptionDTO dto) {
