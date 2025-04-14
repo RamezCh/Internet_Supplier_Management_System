@@ -14,6 +14,7 @@ import {AddInternetPlan} from "./pages/AddInternetPlan.tsx";
 import {EditInternetPlan} from "./pages/EditInternetPlan.tsx";
 import {PageNotFound} from "./pages/PageNotFound.tsx";
 import {CustomerSubscription} from "./pages/CustomerSubscription.tsx";
+import {ManageSubscription} from "./pages/ManageSubscription.tsx";
 
 function App() {
   const [appUser, setAppUser] = useState<AppUser | undefined | null>(undefined);
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/internet-plan/add" element={<AddInternetPlan/>} />
                 <Route path="/internet-plan/:id/edit" element={<EditInternetPlan/>} />
                 <Route path="/customer/subscription/:customerId" element={<CustomerSubscription/>} />
+                <Route path="/customer/subscription/:customerId/edit" element={<ManageSubscription/>} />
               </Route>
                 <Route path="/*" element={<PageNotFound/>} />
             </Routes>
