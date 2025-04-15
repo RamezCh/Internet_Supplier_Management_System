@@ -8,7 +8,6 @@ import java.time.Instant;
 public record SubscriptionDTO(
         @NotNull String customerId,
         @NotNull String internetPlanId,
-        @NotNull Instant startDate,
         @FutureOrPresent Instant endDate,
         @NotNull SubscriptionStatus status
 ) {

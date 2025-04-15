@@ -40,7 +40,6 @@ public class SubscriptionService {
                 idService.randomId(),
                 customerId,
                 internetPlanId,
-                startDate,
                 endDate,
                 SubscriptionStatus.ACTIVE
         );
@@ -61,7 +60,6 @@ public class SubscriptionService {
                             subscription.id(),
                             customer,
                             internetPlan,
-                            subscription.startDate(),
                             subscription.endDate(),
                             subscription.status()
                     );
@@ -85,7 +83,6 @@ public class SubscriptionService {
                 existing.id(),
                 dto.customerId(),
                 dto.internetPlanId(),
-                dto.startDate(),
                 dto.endDate(),
                 dto.status()
         );

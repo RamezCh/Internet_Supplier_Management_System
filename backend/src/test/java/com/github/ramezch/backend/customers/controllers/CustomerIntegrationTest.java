@@ -293,9 +293,8 @@ class CustomerIntegrationTest {
     void deleteCustomer_whenExist_returnNoContent() throws Exception {
         // GIVEN
         repo.save(newCustomer);
-        Instant startDate = Instant.now();
         Instant endDate = Instant.now();
-        Subscription newCustomerSub = new Subscription("23456", "123", "1", startDate, endDate, SubscriptionStatus.ACTIVE);
+        Subscription newCustomerSub = new Subscription("23456", "123", "1", endDate, SubscriptionStatus.ACTIVE);
         subscriptionRepository.save(newCustomerSub);
         // WHEN
         mvc.perform(delete(baseURL + "/123")
