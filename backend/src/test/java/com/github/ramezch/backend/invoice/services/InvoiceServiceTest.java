@@ -168,4 +168,15 @@ class InvoiceServiceTest {
         verify(invoiceRepo, times(1)).findById(nonExistentId);
         verify(invoiceRepo, never()).save(any());
     }
+
+    @Test
+    void getInvoiceById() {
+        // GIVEN
+        when(invoiceRepo.findById(testId)).thenReturn(Optional.ofNullable(testInvoice));
+        // WHEN
+        Invoice actual = invoiceService.getInvoiceById(testId).get();
+        // THEN
+        assertEquals(testInvoice, actual);
+        verify(invoiceRepo).findById(testId);
+    }
 }

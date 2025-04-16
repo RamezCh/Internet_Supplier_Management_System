@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,10 @@ public class InvoiceService {
 
     public List<Invoice> getInvoices() {
         return invoiceRepo.findAll();
+    }
+
+    public Optional<Invoice> getInvoiceById(String invoiceID) {
+        return invoiceRepo.findById(invoiceID);
     }
 
     public List<Invoice> getInvoicesBySubscriptionId(String subscriptionId) {
