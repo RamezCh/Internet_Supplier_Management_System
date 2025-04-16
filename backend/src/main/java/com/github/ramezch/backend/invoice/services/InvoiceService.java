@@ -10,12 +10,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class InvoiceService {
     private final InvoiceRepository invoiceRepo;
     private final IdService idService;
+
+    public List<Invoice> getInvoices() {
+        return invoiceRepo.findAll();
+    }
+
+    public List<Invoice> getInvoicesBySubscriptionId(String subscriptionId) {
+        return invoiceRepo.findBySubscriptionId(subscriptionId);
+    }
 
     public Invoice getInvoice(String subscriptionId, Instant subscriptionEndDate) {
         return invoiceRepo.findBySubscriptionIdAndDueDate(subscriptionId, subscriptionEndDate);
