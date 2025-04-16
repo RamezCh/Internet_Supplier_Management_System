@@ -11,7 +11,7 @@ public record Subscription(
         @NotNull String customerId,
         @NotNull String internetPlanId,
         @With @FutureOrPresent Instant endDate,
-        @NotNull SubscriptionStatus status
+        @With @NotNull SubscriptionStatus status
 ) {
     private static final int SEVEN_DAYS_GRACE_PERIOD_IN_SECONDS = 7 * 24 * 60 * 60;
 
