@@ -1,5 +1,6 @@
 package com.github.ramezch.backend.invoice.services;
 
+import com.github.ramezch.backend.appuser.AppUser;
 import com.github.ramezch.backend.exceptions.InvoiceNotFoundException;
 import com.github.ramezch.backend.invoice.models.Invoice;
 import com.github.ramezch.backend.invoice.models.InvoiceDTO;
@@ -19,18 +20,39 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepo;
     private final IdService idService;
 
-    public List<Invoice> getInvoices() {
-        return invoiceRepo.findAll();
+    private void  checkIfAppUserContainsCustomerId(String customerId, AppUser appUser) throws IllegalAccessException {
+        if(!appUser.getCustomerIds().contains(customerId)) {
+            throw new IllegalAccessException(String.format("Customer with id: %s not found", customerId));
+        }
     }
 
-    public Optional<Invoice> getInvoiceById(String invoiceID) {
-        return invoiceRepo.findById(invoiceID);
+    public List<Invoice> getInvoicesByCustomerId(String customerId, AppUser appUser) throws IllegalAccessException {
+        checkIfAppUserContainsCustomerId(customerId, appUser);
+        return invoiceRepo.findAllByCustomerId(customerId);
     }
 
-    public List<Invoice> getInvoicesBySubscriptionId(String subscriptionId) {
-        return invoiceRepo.findBySubscriptionId(subscriptionId);
+    public Invoice getInvoiceById(String invoiceID, AppUser appUser) throws IllegalAccessException {
+        Optional<Invoice> invoiceOptional = invoiceRepo.findById(invoiceID);
+        if(invoiceOptional.isEmpty()) {
+            throw new InvoiceNotFoundException(invoiceID);
+        }
+        Invoice invoice = invoiceOptional.get();
+        String customerId = invoice.customerId();
+        checkIfAppUserContainsCustomerId(customerId, appUser);
+        return invoice;
     }
 
+    public InvoiceUpdateDTO updateInvoice(InvoiceUpdateDTO invoiceDTO, AppUser appUser) throws IllegalAccessException {
+        Invoice existingInvoice = invoiceRepo.findById(invoiceDTO.id()).orElseThrow(() -> new InvoiceNotFoundException(invoiceDTO.id()));
+        checkIfAppUserContainsCustomerId(existingInvoice.customerId(), appUser);
+        if(invoiceDTO.amountPaid() == existingInvoice.amountDue()) {
+            Invoice newInvoiceToSave = existingInvoice.withPaid(true).withAmountPaid(invoiceDTO.amountPaid());
+            invoiceRepo.save(newInvoiceToSave);
+        }
+        return invoiceDTO;
+    }
+
+    // These are used in Scheduler and other backend codes
     public Invoice getInvoice(String subscriptionId, Instant subscriptionEndDate) {
         return invoiceRepo.findBySubscriptionIdAndDueDate(subscriptionId, subscriptionEndDate);
     }
@@ -38,17 +60,8 @@ public class InvoiceService {
     public void generateInvoice(InvoiceDTO invoiceDTO) {
         String invoiceID = idService.randomId();
         Instant issueDate = Instant.now();
-        Invoice newInvoice = new Invoice(invoiceID, invoiceDTO.subscriptionId(), issueDate, invoiceDTO.dueDate(), invoiceDTO.amountDue(), 0, false);
+        Invoice newInvoice = new Invoice(invoiceID, invoiceDTO.customerId(), invoiceDTO.subscriptionId(), issueDate, invoiceDTO.dueDate(), invoiceDTO.amountDue(), 0, false);
         invoiceRepo.save(newInvoice);
-    }
-
-    public InvoiceUpdateDTO updateInvoice(InvoiceUpdateDTO invoiceDTO) {
-        Invoice existingInvoice = invoiceRepo.findById(invoiceDTO.id()).orElseThrow(() -> new InvoiceNotFoundException(invoiceDTO.id()));
-        if(invoiceDTO.amountPaid() == existingInvoice.amountDue()) {
-            Invoice newInvoiceToSave = existingInvoice.withPaid(true).withAmountPaid(invoiceDTO.amountPaid());
-            invoiceRepo.save(newInvoiceToSave);
-        }
-        return invoiceDTO;
     }
 
 }

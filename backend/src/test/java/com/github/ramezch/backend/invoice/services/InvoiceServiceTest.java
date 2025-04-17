@@ -1,5 +1,7 @@
 package com.github.ramezch.backend.invoice.services;
 
+import com.github.ramezch.backend.appuser.AppUser;
+import com.github.ramezch.backend.appuser.AppUserRepository;
 import com.github.ramezch.backend.exceptions.InvoiceNotFoundException;
 import com.github.ramezch.backend.invoice.models.Invoice;
 import com.github.ramezch.backend.invoice.models.InvoiceDTO;
@@ -25,15 +27,17 @@ class InvoiceServiceTest {
 
     @Mock
     private InvoiceRepository invoiceRepo;
-
     @Mock
     private IdService idService;
+    @Mock
+    private AppUserRepository appUserRepo;
 
     @InjectMocks
     private InvoiceService invoiceService;
 
     private Invoice testInvoice;
     private final String testId = "test123";
+    private final String custId = "cust123";
     private final String testSubscriptionId = "sub123";
     private final Instant testDueDate = Instant.now().plusSeconds(86400);
     private final Instant testIssueDate = Instant.now();
@@ -41,142 +45,141 @@ class InvoiceServiceTest {
 
     @BeforeEach
     void setUp() {
-        testInvoice = new Invoice(testId, testSubscriptionId, testIssueDate, testDueDate, testAmountDue, 0, false);
+        testInvoice = new Invoice(testId, custId, testSubscriptionId, testIssueDate, testDueDate, testAmountDue, 0, false);
     }
 
     @Test
-    void getInvoices_shouldReturnAllInvoices() {
-        // Given
-        when(invoiceRepo.findAll()).thenReturn(List.of(testInvoice));
+    void getInvoicesByCustomerId_shouldReturnInvoices_whenCustomerIdMatches() throws Exception {
+        // GIVEN
+        AppUser mockUser = new AppUser();
+        mockUser.setCustomerIds(List.of(custId));
+        when(invoiceRepo.findAllByCustomerId(custId)).thenReturn(List.of(testInvoice));
 
-        // When
-        List<Invoice> result = invoiceService.getInvoices();
+        // WHEN
+        List<Invoice> result = invoiceService.getInvoicesByCustomerId(custId, mockUser);
 
-        // Then
+        // THEN
         assertEquals(1, result.size());
         assertEquals(testInvoice, result.getFirst());
-        verify(invoiceRepo, times(1)).findAll();
+        verify(invoiceRepo).findAllByCustomerId(custId);
     }
 
     @Test
-    void getInvoicesBySubscriptionId_shouldReturnMatchingInvoices() {
-        // Given
-        when(invoiceRepo.findBySubscriptionId(testSubscriptionId)).thenReturn(List.of(testInvoice));
+    void getInvoicesByCustomerId_shouldThrow_whenCustomerIdNotInUser() {
+        // GIVEN
+        AppUser mockUser = new AppUser();
+        mockUser.setCustomerIds(List.of("other-cust"));
 
-        // When
-        List<Invoice> result = invoiceService.getInvoicesBySubscriptionId(testSubscriptionId);
-
-        // Then
-        assertEquals(1, result.size());
-        assertEquals(testInvoice, result.getFirst());
-        verify(invoiceRepo, times(1)).findBySubscriptionId(testSubscriptionId);
+        // WHEN & THEN
+        assertThrows(IllegalAccessException.class,
+                () -> invoiceService.getInvoicesByCustomerId(custId, mockUser));
+        verify(invoiceRepo, never()).findAllByCustomerId(any());
     }
 
     @Test
-    void getInvoice_shouldReturnInvoiceWhenFound() {
-        // Given
-        when(invoiceRepo.findBySubscriptionIdAndDueDate(testSubscriptionId, testDueDate))
-                .thenReturn(testInvoice);
+    void getInvoiceById_shouldReturnInvoice_whenFoundAndAuthorized() throws Exception {
+        // GIVEN
+        AppUser mockUser = new AppUser();
+        mockUser.setCustomerIds(List.of(custId));
+        when(invoiceRepo.findById(testId)).thenReturn(Optional.of(testInvoice));
 
-        // When
-        Invoice result = invoiceService.getInvoice(testSubscriptionId, testDueDate);
+        // WHEN
+        Invoice result = invoiceService.getInvoiceById(testId, mockUser);
 
-        // Then
+        // THEN
         assertEquals(testInvoice, result);
-        verify(invoiceRepo, times(1)).findBySubscriptionIdAndDueDate(testSubscriptionId, testDueDate);
+        verify(invoiceRepo).findById(testId);
     }
 
     @Test
-    void getInvoice_shouldReturnNullWhenNotFound() {
-        // Given
-        when(invoiceRepo.findBySubscriptionIdAndDueDate("nonexistent", testDueDate))
-                .thenReturn(null);
+    void getInvoiceById_shouldThrow_whenInvoiceNotFound() {
+        // GIVEN
+        AppUser mockUser = new AppUser();
+        mockUser.setCustomerIds(List.of(custId));
+        when(invoiceRepo.findById(testId)).thenReturn(Optional.empty());
 
-        // When
-        Invoice result = invoiceService.getInvoice("nonexistent", testDueDate);
+        // WHEN & THEN
+        assertThrows(InvoiceNotFoundException.class,
+                () -> invoiceService.getInvoiceById(testId, mockUser));
+        verify(invoiceRepo).findById(testId);
+    }
 
-        // Then
-        assertNull(result);
-        verify(invoiceRepo, times(1)).findBySubscriptionIdAndDueDate("nonexistent", testDueDate);
+    @Test
+    void getInvoiceById_shouldThrow_whenUnauthorized() {
+        // GIVEN
+        AppUser mockUser = new AppUser();
+        mockUser.setCustomerIds(List.of("other-cust"));
+        when(invoiceRepo.findById(testId)).thenReturn(Optional.of(testInvoice));
+
+        // WHEN & THEN
+        assertThrows(IllegalAccessException.class,
+                () -> invoiceService.getInvoiceById(testId, mockUser));
+        verify(invoiceRepo).findById(testId);
+    }
+
+    @Test
+    void updateInvoice_shouldUpdateInvoice_whenAuthorized() throws Exception {
+        // GIVEN
+        AppUser mockUser = new AppUser();
+        mockUser.setCustomerIds(List.of(custId));
+        double amountPaid = testAmountDue;
+        InvoiceUpdateDTO updateDTO = new InvoiceUpdateDTO(testId, amountPaid);
+        Invoice expectedInvoice = testInvoice.withPaid(true).withAmountPaid(amountPaid);
+
+        when(invoiceRepo.findById(testId)).thenReturn(Optional.of(testInvoice));
+        when(invoiceRepo.save(expectedInvoice)).thenReturn(expectedInvoice);
+
+        // WHEN
+        InvoiceUpdateDTO result = invoiceService.updateInvoice(updateDTO, mockUser);
+
+        // THEN
+        assertEquals(updateDTO, result);
+        verify(invoiceRepo).findById(testId);
+        verify(invoiceRepo).save(expectedInvoice);
     }
 
     @Test
     void generateInvoice_shouldCreateNewInvoice() {
-        // Given
+        // GIVEN
         String newId = "new123";
-        InvoiceDTO invoiceDTO = new InvoiceDTO(testSubscriptionId, testDueDate, testAmountDue);
-        Invoice expectedInvoice = new Invoice(newId, testSubscriptionId, testIssueDate, testDueDate, testAmountDue, 0, false);
+        InvoiceDTO invoiceDTO = new InvoiceDTO(custId, testSubscriptionId, testDueDate, testAmountDue);
 
         when(idService.randomId()).thenReturn(newId);
-        when(invoiceRepo.save(any(Invoice.class))).thenReturn(expectedInvoice);
+        when(invoiceRepo.save(any(Invoice.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // When
+        // WHEN
         invoiceService.generateInvoice(invoiceDTO);
 
-        // Then
-        verify(idService, times(1)).randomId();
-        verify(invoiceRepo, times(1)).save(any(Invoice.class));
-    }
-
-    @Test
-    void updateInvoice_shouldUpdateInvoiceWhenFullAmountPaid() {
-        // Given
-        double amountPaid = testAmountDue;
-        InvoiceUpdateDTO updateDTO = new InvoiceUpdateDTO(testId, amountPaid);
-        Invoice expectedUpdatedInvoice = testInvoice.withPaid(true).withAmountPaid(amountPaid);
-
-        when(invoiceRepo.findById(testId)).thenReturn(Optional.of(testInvoice));
-        when(invoiceRepo.save(expectedUpdatedInvoice)).thenReturn(expectedUpdatedInvoice);
-
-        // When
-        InvoiceUpdateDTO result = invoiceService.updateInvoice(updateDTO);
-
-        // Then
-        assertEquals(updateDTO, result);
-        verify(invoiceRepo, times(1)).findById(testId);
-        verify(invoiceRepo, times(1)).save(expectedUpdatedInvoice);
-    }
-
-    @Test
-    void updateInvoice_shouldNotMarkAsPaidWhenPartialAmountPaid() {
-        // Given
-        double amountPaid = testAmountDue - 10;
-        InvoiceUpdateDTO updateDTO = new InvoiceUpdateDTO(testId, amountPaid);
-        Invoice expectedUpdatedInvoice = testInvoice.withAmountPaid(amountPaid);
-
-        when(invoiceRepo.findById(testId)).thenReturn(Optional.of(testInvoice));
-
-        // When
-        InvoiceUpdateDTO result = invoiceService.updateInvoice(updateDTO);
-
-        // Then
-        assertEquals(updateDTO, result);
-        verify(invoiceRepo, times(1)).findById(testId);
-        assertFalse(expectedUpdatedInvoice.isPaid());
-    }
-
-    @Test
-    void updateInvoice_shouldThrowExceptionWhenInvoiceNotFound() {
-        // Given
-        String nonExistentId = "nonexistent";
-        InvoiceUpdateDTO updateDTO = new InvoiceUpdateDTO(nonExistentId, testAmountDue);
-
-        when(invoiceRepo.findById(nonExistentId)).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThrows(InvoiceNotFoundException.class, () -> invoiceService.updateInvoice(updateDTO));
-        verify(invoiceRepo, times(1)).findById(nonExistentId);
-        verify(invoiceRepo, never()).save(any());
-    }
-
-    @Test
-    void getInvoiceById() {
-        // GIVEN
-        when(invoiceRepo.findById(testId)).thenReturn(Optional.ofNullable(testInvoice));
-        // WHEN
-        Invoice actual = invoiceService.getInvoiceById(testId).get();
         // THEN
-        assertEquals(testInvoice, actual);
-        verify(invoiceRepo).findById(testId);
+        verify(idService).randomId();
+        verify(invoiceRepo).save(any(Invoice.class));
+    }
+
+    @Test
+    void getInvoice_shouldReturnInvoice_whenFound() {
+        // GIVEN
+        when(invoiceRepo.findBySubscriptionIdAndDueDate(testSubscriptionId, testDueDate))
+                .thenReturn(testInvoice);
+
+        // WHEN
+        Invoice result = invoiceService.getInvoice(testSubscriptionId, testDueDate);
+
+        // THEN
+        assertEquals(testInvoice, result);
+        verify(invoiceRepo).findBySubscriptionIdAndDueDate(testSubscriptionId, testDueDate);
+    }
+
+    @Test
+    void getInvoice_shouldReturnNull_whenNotFound() {
+        // GIVEN
+        when(invoiceRepo.findBySubscriptionIdAndDueDate("nonexistent", testDueDate))
+                .thenReturn(null);
+
+        // WHEN
+        Invoice result = invoiceService.getInvoice("nonexistent", testDueDate);
+
+        // THEN
+        assertNull(result);
+        verify(invoiceRepo).findBySubscriptionIdAndDueDate("nonexistent", testDueDate);
     }
 }

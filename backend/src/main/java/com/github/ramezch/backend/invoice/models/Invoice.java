@@ -11,6 +11,7 @@ import java.time.Instant;
 
 public record Invoice(
         @NotBlank String id,
+        @NotBlank String customerId,
         @NotBlank String subscriptionId,
         @PastOrPresent Instant issueDate,
         @FutureOrPresent Instant dueDate,

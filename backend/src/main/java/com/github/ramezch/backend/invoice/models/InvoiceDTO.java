@@ -6,6 +6,7 @@ import lombok.With;
 import java.time.Instant;
 
 public record InvoiceDTO(
+        @NotBlank String customerId,
         @NotBlank String subscriptionId,
         @FutureOrPresent Instant dueDate,
         @With @PositiveOrZero double amountDue

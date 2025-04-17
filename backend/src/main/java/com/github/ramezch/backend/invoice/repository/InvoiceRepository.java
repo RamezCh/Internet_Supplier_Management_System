@@ -11,4 +11,6 @@ public interface InvoiceRepository extends MongoRepository<Invoice, String> {
     Invoice findBySubscriptionIdAndDueDate(@NotBlank String subscriptionId, @NotBlank Instant dueDate);
 
     List<Invoice> findBySubscriptionId(String subscriptionId);
+
+    List<Invoice> findAllByCustomerId(@NotBlank String customerId);
 }

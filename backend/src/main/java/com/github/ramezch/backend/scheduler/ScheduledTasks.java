@@ -73,7 +73,7 @@ public class ScheduledTasks {
                 .findFirst()
                 .ifPresent(plan -> {
                     double invoiceAmountDue = plan.price();
-                    InvoiceDTO newInvoiceDTO = new InvoiceDTO(subscription.id(), newEndDate, invoiceAmountDue);
+                    InvoiceDTO newInvoiceDTO = new InvoiceDTO(subscription.customerId(), subscription.id(), newEndDate, invoiceAmountDue);
                     invoiceService.generateInvoice(newInvoiceDTO);
                 });
     }
