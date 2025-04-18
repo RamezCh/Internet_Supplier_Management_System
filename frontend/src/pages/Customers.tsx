@@ -25,7 +25,6 @@ interface ApiResponse {
 interface ApiParams {
     page: number;
     size: number;
-    sort?: string;
 }
 
 interface ColumnVisibility {
@@ -79,11 +78,7 @@ export const Customers = () => {
     const getCustomers = async (page: number = currentPage, size: number = pageSize) => {
         setIsLoading(true);
         try {
-            const params: ApiParams = {
-                page,
-                size,
-            };
-
+            const params: ApiParams = { page, size };
             const response = await axios.get<ApiResponse>("/api/customers", { params });
             setCustomers(response.data.content);
             setTotalPages(response.data.totalPages);
@@ -98,19 +93,9 @@ export const Customers = () => {
     const searchCustomers = async (page: number = 0, size: number = pageSize) => {
         setIsLoading(true);
         try {
-            const params = new URLSearchParams({
-                page: page.toString(),
-                size: size.toString(),
-            });
-
-            if (searchQuery) {
-                params.append("searchTerm", searchQuery.trim());
-            }
-
-            if (status) {
-                params.append("status", status);
-            }
-
+            const params = new URLSearchParams({ page: page.toString(), size: size.toString() });
+            if (searchQuery) params.append("searchTerm", searchQuery.trim());
+            if (status) params.append("status", status);
             const response = await axios.get<ApiResponse>(
                 `/api/customers/search?${params.toString()}`
             );
@@ -134,15 +119,28 @@ export const Customers = () => {
         return order[current];
     };
 
+    // Toggle sort direction and apply sorting on frontend
     const toggleSort = () => {
         const newDirection = getNextSortDirection(sortDirection);
         setSortDirection(newDirection);
 
-        if (searchQuery || status) {
-            searchCustomers(0);
-        } else {
-            getCustomers(0);
+        // If resetting sort, reload original data
+        if (newDirection === 'none') {
+            if (searchQuery || status) {
+                searchCustomers(0);
+            } else {
+                getCustomers(0);
+            }
+            return;
         }
+
+        // Sort the current list of customers by registrationDate
+        const sorted = [...customers].sort((a, b) => {
+            const dateA = new Date(a.registrationDate).getTime();
+            const dateB = new Date(b.registrationDate).getTime();
+            return newDirection === 'asc' ? dateA - dateB : dateB - dateA;
+        });
+        setCustomers(sorted);
     };
 
     const resetFilters = () => {
@@ -163,7 +161,8 @@ export const Customers = () => {
         try {
             await axios.delete(`/api/customers/${id}`);
             toast.success("Customer deleted successfully");
-            await searchCustomers(currentPage);
+            if (searchQuery || status) searchCustomers(currentPage);
+            else getCustomers(currentPage);
         } catch (error) {
             console.error("Error deleting customer:", error);
             toast.error("Failed to delete customer");
@@ -172,29 +171,19 @@ export const Customers = () => {
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        if (searchQuery || status) {
-            searchCustomers(page);
-        } else {
-            getCustomers(page);
-        }
+        if (searchQuery || status) searchCustomers(page);
+        else getCustomers(page);
     };
 
     const handlePageSizeChange = (size: number) => {
         setPageSize(size);
-        if (searchQuery || status) {
-            searchCustomers(0, size);
-        } else {
-            getCustomers(0, size);
-        }
+        if (searchQuery || status) searchCustomers(0, size);
+        else getCustomers(0, size);
     };
 
     const toggleColumnVisibility = (column: keyof ColumnVisibility) => {
         if (column === 'username' || column === 'fullName') return;
-
-        setColumnVisibility(prev => ({
-            ...prev,
-            [column]: !prev[column]
-        }));
+        setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
     };
 
     useEffect(() => {
