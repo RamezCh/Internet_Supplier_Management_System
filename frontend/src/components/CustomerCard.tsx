@@ -1,3 +1,4 @@
+// CustomerCard.tsx
 import { Customer } from "../types";
 import {FaEdit, FaReceipt, FaTrash} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -46,61 +47,56 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
     };
 
     return (
-        <div className="flex justify-between items-start w-full p-4 border border-gray-200 rounded-lg mb-3 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className="flex justify-between items-start w-full p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow duration-200">
             <div className="flex flex-wrap gap-4 flex-grow">
                 {/* Always visible columns */}
-                <div className="flex gap-2 items-center min-w-[200px]">
-                    <span className="font-medium text-gray-600">Username:</span>
+                <div className="min-w-[200px]">
                     <span className="text-gray-800">{customer.username || '-'}</span>
                 </div>
 
-                <div className="flex gap-2 items-center min-w-[200px]">
-                    <span className="font-medium text-gray-600">Name:</span>
+                <div className="min-w-[200px]">
                     <span className="text-gray-800">{customer.fullName || '-'}</span>
                 </div>
 
                 {/* Conditionally visible columns */}
                 {columnVisibility.phone && (
-                    <div className="flex gap-2 items-center min-w-[200px]">
-                        <span className="font-medium text-gray-600">Phone:</span>
+                    <div className="min-w-[200px]">
                         <span className="text-gray-800">{customer.phone || '-'}</span>
                     </div>
                 )}
 
-                {columnVisibility.address && formatAddress() && (
-                    <div className="flex gap-2 items-center min-w-[200px]">
-                        <span className="font-medium text-gray-600">Address:</span>
-                        <span className="text-gray-800">{formatAddress()}</span>
+                {columnVisibility.address && (
+                    <div className="min-w-[200px]">
+                        <span className="text-gray-800">{formatAddress() || '-'}</span>
                     </div>
                 )}
 
                 {columnVisibility.status && (
-                    <div className="flex gap-2 items-center min-w-[200px]">
-                        <span className="font-medium text-gray-600">Status:</span>
+                    <div className="min-w-[200px]">
                         <span className={`px-2 py-1 text-xs rounded-full ${getStatusStyles(customer.status)}`}>
-                        {customer.status || '-'}
+                            {customer.status || '-'}
                         </span>
                     </div>
                 )}
 
                 {columnVisibility.registrationDate && (
-                    <div className="flex gap-2 items-center min-w-[200px]">
-                        <span className="font-medium text-gray-600">Registered:</span>
-                        <span className="text-gray-800">{new Date(customer.registrationDate).toLocaleString(undefined, {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        }) || '-'}</span>
+                    <div className="min-w-[200px]">
+                        <span className="text-gray-800">
+                            {customer.registrationDate ? new Date(customer.registrationDate).toLocaleString(undefined, {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }) : '-'}
+                        </span>
                     </div>
                 )}
 
-                {columnVisibility.notes && customer.notes && (
-                    <div className="flex gap-2 items-center min-w-[200px]">
-                        <span className="font-medium text-gray-600">Notes:</span>
+                {columnVisibility.notes && (
+                    <div className="min-w-[200px]">
                         <span className="text-gray-800 max-w-xs truncate">
-                            {customer.notes}
+                            {customer.notes || '-'}
                         </span>
                     </div>
                 )}
