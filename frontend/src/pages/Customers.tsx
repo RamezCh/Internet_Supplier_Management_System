@@ -84,10 +84,6 @@ export const Customers = () => {
                 size,
             };
 
-            if (sortDirection !== 'none') {
-                params.sort = `registrationDate,${sortDirection}`;
-            }
-
             const response = await axios.get<ApiResponse>("/api/customers", { params });
             setCustomers(response.data.content);
             setTotalPages(response.data.totalPages);
@@ -113,10 +109,6 @@ export const Customers = () => {
 
             if (status) {
                 params.append("status", status);
-            }
-
-            if (sortDirection !== 'none') {
-                params.append("sort", `registrationDate,${sortDirection}`);
             }
 
             const response = await axios.get<ApiResponse>(
