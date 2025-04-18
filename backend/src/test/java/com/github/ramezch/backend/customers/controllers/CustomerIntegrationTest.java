@@ -527,8 +527,8 @@ class CustomerIntegrationTest {
                 // THEN
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.content[0].username").value("new_customer"))
-                .andExpect(jsonPath("$.content[1].username").value("another_user"));
+                .andExpect(jsonPath("$.content[0].username").value("another_user"))
+                .andExpect(jsonPath("$.content[1].username").value("new_customer"));
     }
 
     @Test
