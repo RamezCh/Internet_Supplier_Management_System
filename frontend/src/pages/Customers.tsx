@@ -12,21 +12,14 @@ import { RadioButton } from "../shared/RadioButton.tsx";
 
 interface ApiResponse {
     content: Customer[];
-    pageable: {
-        pageNumber: number;
-        pageSize: number;
-    };
+    pageable: { pageNumber: number; pageSize: number };
     totalPages: number;
     totalElements: number;
     first: boolean;
     last: boolean;
 }
 
-interface ApiParams {
-    page: number;
-    size: number;
-    sort?: string;
-}
+type SortDirection = 'asc' | 'desc' | 'none';
 
 interface ColumnVisibility {
     username: boolean;
@@ -36,13 +29,6 @@ interface ColumnVisibility {
     status: boolean;
     registrationDate: boolean;
     notes: boolean;
-}
-
-type SortDirection = 'asc' | 'desc' | 'none';
-
-interface StatusOption {
-    value: string;
-    label: string;
 }
 
 export const Customers = () => {
@@ -65,7 +51,7 @@ export const Customers = () => {
     });
     const [sortDirection, setSortDirection] = useState<SortDirection>('none');
 
-    const statusOptions: StatusOption[] = [
+    const statusOptions = [
         { value: "", label: "All" },
         { value: "ACTIVE", label: "Active" },
         { value: "EXPIRING", label: "Expiring" },
@@ -73,141 +59,99 @@ export const Customers = () => {
         { value: "EXPIRED", label: "Expired" },
         { value: "PENDING_ACTIVATION", label: "Pending Activation" },
     ];
+    const pageSizeOptions = [5, 10, 15, 20];
 
-    const pageSizeOptions: number[] = [5, 10, 15, 20];
-
-    const getCustomers = async (page: number = currentPage, size: number = pageSize) => {
+    /**
+     * Fetches customers with server-side pagination and sorting.
+     * @param page     zero-based page index
+     * @param size     number of items per page
+     * @param direction 'asc' | 'desc' | 'none'
+     * @param query     optional search term override
+     * @param statusFilter optional status override
+     */
+    const fetchCustomers = async (
+        page: number,
+        size: number,
+        direction: SortDirection,
+        query: string = searchQuery,
+        statusFilter: string = status
+    ) => {
         setIsLoading(true);
         try {
-            const params: ApiParams = {
-                page,
-                size,
-            };
-
-            if (sortDirection !== 'none') {
-                params.sort = `registrationDate,${sortDirection}`;
+            const params: Record<string, string> = { page: String(page), size: String(size) };
+            if (direction !== 'none') {
+                params.sort = `registrationDate,${direction}`;
             }
 
-            const response = await axios.get<ApiResponse>("/api/customers", { params });
-            setCustomers(response.data.content);
-            setTotalPages(response.data.totalPages);
-        } catch (error) {
-            console.error("Error fetching customers:", error);
-            toast.error("Failed to load customers");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+            const queryString = new URLSearchParams({
+                ...params,
+                ...(query && { searchTerm: query.trim() }),
+                ...(statusFilter && { status: statusFilter }),
+            }).toString();
 
-    const searchCustomers = async (page: number = 0, size: number = pageSize) => {
-        setIsLoading(true);
-        try {
-            const params = new URLSearchParams({
-                page: page.toString(),
-                size: size.toString(),
-            });
+            const url = (query || statusFilter)
+                ? `/api/customers/search?${queryString}`
+                : `/api/customers?${queryString}`;
 
-            if (searchQuery) {
-                params.append("searchTerm", searchQuery.trim());
-            }
-
-            if (status) {
-                params.append("status", status);
-            }
-
-            if (sortDirection !== 'none') {
-                params.append("sort", `registrationDate,${sortDirection}`);
-            }
-
-            const response = await axios.get<ApiResponse>(
-                `/api/customers/search?${params.toString()}`
-            );
-            setCustomers(response.data.content);
+            const { data } = await axios.get<ApiResponse>(url);
+            setCustomers(data.content);
+            setTotalPages(data.totalPages);
             setCurrentPage(page);
-            setTotalPages(response.data.totalPages);
         } catch (error) {
-            console.error("Error searching customers:", error);
+            console.error("Error loading customers:", error);
             toast.error("Failed to load customers");
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const getNextSortDirection = (current: SortDirection): SortDirection => {
-        const order: Record<SortDirection, SortDirection> = {
-            'none': 'desc',
-            'desc': 'asc',
-            'asc': 'none'
-        };
-        return order[current];
     };
 
     const toggleSort = () => {
-        const newDirection = getNextSortDirection(sortDirection);
-        setSortDirection(newDirection);
-
-        if (searchQuery || status) {
-            searchCustomers(0);
-        } else {
-            getCustomers(0);
-        }
+        const next: SortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        setSortDirection(next);
+        fetchCustomers(0, pageSize, next);
     };
 
     const resetFilters = () => {
+        // Clear all filters and reset sort to none (server default)
         setSearchQuery("");
         setStatus("");
         setSortDirection('none');
-        getCustomers(0);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            searchCustomers(0);
-        }
+        // Explicitly pass empty overrides to avoid stale state
+        fetchCustomers(0, pageSize, 'none', '', '');
     };
 
     const handleDelete = async (id: string) => {
         try {
             await axios.delete(`/api/customers/${id}`);
             toast.success("Customer deleted successfully");
-            await searchCustomers(currentPage);
+            // Refetch current page with current filters/sort
+            fetchCustomers(currentPage, pageSize, sortDirection);
         } catch (error) {
             console.error("Error deleting customer:", error);
             toast.error("Failed to delete customer");
         }
     };
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        if (searchQuery || status) {
-            searchCustomers(page);
-        } else {
-            getCustomers(page);
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            fetchCustomers(0, pageSize, sortDirection);
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        fetchCustomers(page, pageSize, sortDirection);
     };
 
     const handlePageSizeChange = (size: number) => {
         setPageSize(size);
-        if (searchQuery || status) {
-            searchCustomers(0, size);
-        } else {
-            getCustomers(0, size);
-        }
+        fetchCustomers(0, size, sortDirection);
     };
 
     const toggleColumnVisibility = (column: keyof ColumnVisibility) => {
         if (column === 'username' || column === 'fullName') return;
-
-        setColumnVisibility(prev => ({
-            ...prev,
-            [column]: !prev[column]
-        }));
+        setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
     };
-
-    useEffect(() => {
-        getCustomers();
-    }, []);
 
     const getSortIcon = () => {
         switch (sortDirection) {
@@ -217,26 +161,32 @@ export const Customers = () => {
         }
     };
 
+    useEffect(() => {
+        fetchCustomers(0, pageSize, sortDirection);
+    }, []);
+
     return (
         <div className="flex flex-col gap-4 p-4 max-w-full">
+            {/* Search and Actions */}
             <div className="flex flex-col sm:flex-row items-center mb-5 gap-4 w-full">
                 <Input
                     label="Search Bar"
-                    placeholder="Search by username, name, city, phone number..."
+                    placeholder="Search by username, name, city..."
                     value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     onKeyDown={handleKeyDown}
                     containerClassName="flex-grow w-full sm:w-auto mb-0"
                 />
                 <Button
-                    onClick={() => searchCustomers(0)}
+                    onClick={() => fetchCustomers(0, pageSize, sortDirection)}
                     className="h-[42px] w-full sm:w-auto"
                     disabled={isLoading}
                 >
-                    {isLoading ? "Searching..." : "Search"}
+                    {isLoading ? "Loading..." : "Search"}
                 </Button>
             </div>
 
+            {/* Filters / Sort / Columns / PageSize */}
             <div className="flex flex-col lg:flex-row items-center justify-between mb-5 gap-4 w-full">
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                     <RadioButton
@@ -258,16 +208,13 @@ export const Customers = () => {
                 </div>
 
                 <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-normal">
-                    <div className="flex items-center gap-2">
-                        <Button
-                            onClick={toggleSort}
-                            variant="secondary"
-                            className="h-[42px] flex items-center"
-                        >
-                            Sort by Date
-                            {getSortIcon()}
-                        </Button>
-                    </div>
+                    <Button
+                        onClick={toggleSort}
+                        variant="secondary"
+                        className="h-[42px] flex items-center"
+                    >
+                        Sort by Date{getSortIcon()}
+                    </Button>
 
                     <div className="relative w-full sm:w-auto">
                         <Button
@@ -277,20 +224,17 @@ export const Customers = () => {
                         >
                             <FaColumns /> Columns
                         </Button>
-
                         {showColumnMenu && (
                             <div className="absolute right-0 mt-2 w-full sm:w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                                 <div className="p-2">
                                     <div className="flex items-center gap-2 p-1 opacity-50 cursor-not-allowed">
-                                        <input type="checkbox" checked disabled className="rounded text-blue-600" />
-                                        <span>Username</span>
+                                        <input type="checkbox" checked disabled className="rounded text-blue-600" /> <span>Username</span>
                                     </div>
                                     <div className="flex items-center gap-2 p-1 opacity-50 cursor-not-allowed">
-                                        <input type="checkbox" checked disabled className="rounded text-blue-600" />
-                                        <span>Full Name</span>
+                                        <input type="checkbox" checked disabled className="rounded text-blue-600" /> <span>Full Name</span>
                                     </div>
                                     {Object.entries(columnVisibility)
-                                        .filter(([key]) => key !== 'username' && key !== 'fullName')
+                                        .filter(([k]) => k !== 'username' && k !== 'fullName')
                                         .map(([key, visible]) => (
                                             <label key={key} className="flex items-center gap-2 p-1 hover:bg-gray-100 cursor-pointer">
                                                 <input
@@ -311,17 +255,16 @@ export const Customers = () => {
                         <span className="text-sm text-gray-600">Items per page:</span>
                         <select
                             value={pageSize}
-                            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                            onChange={e => handlePageSizeChange(Number(e.target.value))}
                             className="border rounded-md p-1 text-sm w-full sm:w-auto"
                         >
-                            {pageSizeOptions.map((size) => (
-                                <option key={size} value={size}>{size}</option>
-                            ))}
+                            {pageSizeOptions.map(size => <option key={size} value={size}>{size}</option>)}
                         </select>
                     </div>
                 </div>
             </div>
 
+            {/* List */}
             {isLoading ? (
                 <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -329,8 +272,8 @@ export const Customers = () => {
             ) : (
                 <>
                     <div className="grid gap-4">
-                        {customers.length > 0 ? (
-                            customers.map((customer) => (
+                        {customers.length ? (
+                            customers.map(customer => (
                                 <CustomerCard
                                     key={customer.username}
                                     customer={customer}
@@ -339,33 +282,26 @@ export const Customers = () => {
                                 />
                             ))
                         ) : (
-                            <div className="text-center py-8 text-gray-500">
-                                No customers found matching your criteria
-                            </div>
+                            <div className="text-center py-8 text-gray-500">No customers found matching your criteria</div>
                         )}
                     </div>
 
+                    {/* Pagination */}
                     {customers.length > 0 && (
                         <div className="flex justify-center mt-6 gap-4">
                             <button
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 0}
                                 className="p-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                            >
-                                <FaChevronLeft className="w-4 h-4" />
-                            </button>
+                            ><FaChevronLeft className="w-4 h-4" /></button>
 
-                            <span className="flex items-center">
-                                Page {currentPage + 1} of {totalPages}
-                            </span>
+                            <span className="flex items-center">Page {currentPage + 1} of {totalPages}</span>
 
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={totalPages - 1 <= currentPage}
+                                disabled={currentPage + 1 >= totalPages}
                                 className="p-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-                            >
-                                <FaChevronRight className="w-4 h-4" />
-                            </button>
+                            ><FaChevronRight className="w-4 h-4" /></button>
                         </div>
                     )}
                 </>

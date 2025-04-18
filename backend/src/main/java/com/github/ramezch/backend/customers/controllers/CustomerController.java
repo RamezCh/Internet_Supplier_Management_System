@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,11 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping
-    public Page<Customer> getCustomers(Pageable pageable, @AuthenticationPrincipal AppUser appUser) {
+    public Page<Customer> getCustomers(
+            @PageableDefault(sort = "registrationDate", direction = Sort.Direction.DESC)
+            Pageable pageable,
+            @AuthenticationPrincipal AppUser appUser
+    ) {
         return customerService.getCustomers(pageable, appUser);
     }
 
@@ -31,8 +37,10 @@ public class CustomerController {
     public Page<Customer> searchCustomers(
             @RequestParam(required = false) CustomerStatus status,
             @RequestParam(required = false) String searchTerm,
+            @PageableDefault(sort = "registrationDate", direction = Sort.Direction.DESC)
             Pageable pageable,
-            @AuthenticationPrincipal AppUser appUser) {
+            @AuthenticationPrincipal AppUser appUser
+    ) {
         return customerService.searchCustomers(appUser, status, searchTerm, pageable);
     }
 
