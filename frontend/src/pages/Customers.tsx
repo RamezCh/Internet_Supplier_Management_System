@@ -61,14 +61,6 @@ export const Customers = () => {
     ];
     const pageSizeOptions = [5, 10, 15, 20];
 
-    /**
-     * Fetches customers with server-side pagination and sorting.
-     * @param page     zero-based page index
-     * @param size     number of items per page
-     * @param direction 'asc' | 'desc' | 'none'
-     * @param query     optional search term override
-     * @param statusFilter optional status override
-     */
     const fetchCustomers = async (
         page: number,
         size: number,
@@ -112,11 +104,9 @@ export const Customers = () => {
     };
 
     const resetFilters = () => {
-        // Clear all filters and reset sort to none (server default)
         setSearchQuery("");
         setStatus("");
         setSortDirection('none');
-        // Explicitly pass empty overrides to avoid stale state
         fetchCustomers(0, pageSize, 'none', '', '');
     };
 
@@ -124,7 +114,6 @@ export const Customers = () => {
         try {
             await axios.delete(`/api/customers/${id}`);
             toast.success("Customer deleted successfully");
-            // Refetch current page with current filters/sort
             fetchCustomers(currentPage, pageSize, sortDirection);
         } catch (error) {
             console.error("Error deleting customer:", error);
