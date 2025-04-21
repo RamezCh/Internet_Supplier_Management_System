@@ -8,6 +8,7 @@ import com.github.ramezch.backend.exceptions.CustomerSubscriptionNotFoundExcepti
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
+import com.github.ramezch.backend.invoice.services.InvoiceService;
 import com.github.ramezch.backend.subscription.models.Subscription;
 import com.github.ramezch.backend.subscription.models.SubscriptionDTO;
 import com.github.ramezch.backend.subscription.models.SubscriptionDetailsDTO;
@@ -38,6 +39,8 @@ class SubscriptionServiceTest {
     private CustomerRepository customerRepo;
     @Mock
     private IdService idService;
+    @Mock
+    private InvoiceService invoiceService;
     @InjectMocks
     private SubscriptionService subscriptionService;
 
