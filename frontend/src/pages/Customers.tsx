@@ -260,7 +260,55 @@ export const Customers = () => {
                 </div>
             ) : (
                 <>
-                    <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        {customers.length > 0 && (
+                            <div className="flex justify-between items-start w-full p-6 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                                <div className="flex flex-wrap gap-5 flex-grow">
+                                    {/* Always visible columns */}
+                                    <div className="min-w-[200px]">
+                                        <span className="font-medium text-gray-600">Username</span>
+                                    </div>
+                                    <div className="min-w-[200px]">
+                                        <span className="font-medium text-gray-600">Name</span>
+                                    </div>
+
+                                    {/* Conditionally visible columns */}
+                                    {columnVisibility.phone && (
+                                        <div className="min-w-[200px]">
+                                            <span className="font-medium text-gray-600">Phone</span>
+                                        </div>
+                                    )}
+
+                                    {columnVisibility.address && (
+                                        <div className="min-w-[200px]">
+                                            <span className="font-medium text-gray-600">Address</span>
+                                        </div>
+                                    )}
+
+                                    {columnVisibility.status && (
+                                        <div className="min-w-[200px]">
+                                            <span className="font-medium text-gray-600">Status</span>
+                                        </div>
+                                    )}
+
+                                    {columnVisibility.registrationDate && (
+                                        <div className="min-w-[200px]">
+                                            <span className="font-medium text-gray-600">Registered</span>
+                                        </div>
+                                    )}
+
+                                    {columnVisibility.notes && (
+                                        <div className="min-w-[200px]">
+                                            <span className="font-medium text-gray-600">Notes</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="min-w-[120px] ml-4">
+                                    <span className="font-medium text-gray-600">Actions</span>
+                                </div>
+                            </div>
+                        )}
                         {customers.length ? (
                             customers.map(customer => (
                                 <CustomerCard
