@@ -25,7 +25,7 @@ public class ScheduledTasks {
     private final SubscriptionRepository subscriptionRepository;
     private final InternetPlanRepository internetPlanRepository;
     private final InvoiceService invoiceService;
-    private static final String DAILY_AT_MIDNIGHT = "0 0 * * *";
+    private static final String DAILY_AT_MIDNIGHT = "0 0 0 * * *";
 
 
     @Scheduled(cron = DAILY_AT_MIDNIGHT)
