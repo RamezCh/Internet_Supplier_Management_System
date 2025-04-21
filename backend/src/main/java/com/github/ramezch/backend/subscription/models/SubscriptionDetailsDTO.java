@@ -9,7 +9,6 @@ public record SubscriptionDetailsDTO(
         String id,
         Customer customer,
         InternetPlan internetPlan,
-        Instant startDate,
         Instant endDate,
         SubscriptionStatus status
 ) {}

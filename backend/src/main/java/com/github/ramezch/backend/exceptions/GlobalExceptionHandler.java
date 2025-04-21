@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 @RestControllerAdvice
@@ -21,9 +23,19 @@ public class GlobalExceptionHandler {
     // Handle Failure at Data Validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage handleIncorrectArgumentsException(MethodArgumentNotValidException exception) {
-        logger.info("Incorrect Argument, check user input " + exception.getMessage());
-        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
+    public List<String> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> String.format("%s: %s", error.getField(), error.getDefaultMessage()))
+                .toList();
+
+        if (!errors.isEmpty()) {
+            String logMessage = String.format("Validation errors: %s at %s",
+                    errors,
+                    Instant.now());
+            logger.info(logMessage);
+        }
+
+        return errors;
     }
 
     // Handle CustomerNotFoundException
@@ -31,6 +43,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorMessage handleCustomerNotFoundException(CustomerNotFoundException exception) {
         logger.info("Customer not found: " + exception.getMessage());
+        return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
+    }
+
+    // Handle InvoiceNotFoundException
+    @ExceptionHandler(InvoiceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleInvoiceNotFoundException(InvoiceNotFoundException exception) {
+        logger.info("Invoice not found: " + exception.getMessage());
         return new ErrorMessage(exception.getMessage(), LocalDateTime.now());
     }
 

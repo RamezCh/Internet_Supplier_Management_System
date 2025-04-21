@@ -98,7 +98,6 @@ class SubscriptionControllerIntegrationTest {
                 "sub123",
                 "customer123",
                 "plan123",
-                startDate,
                 endDate,
                 SubscriptionStatus.ACTIVE
         );
@@ -120,7 +119,6 @@ class SubscriptionControllerIntegrationTest {
                 .andExpect(jsonPath("$.internetPlan.id").value("plan123"))
                 .andExpect(jsonPath("$.internetPlan.name").value("Premium Plan"))
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
-                .andExpect(jsonPath("$.startDate").exists())
                 .andExpect(jsonPath("$.endDate").exists());
     }
 
@@ -173,11 +171,10 @@ class SubscriptionControllerIntegrationTest {
                     {
                         "customerId": "customer123",
                         "internetPlanId": "plan123",
-                        "startDate": "%s",
                         "endDate": "%s",
                         "status": "CANCELLED"
                     }
-                    """.formatted(testSubscription.startDate().toString(), newEndDate.toString())))
+                    """.formatted(newEndDate.toString())))
                 .andExpect(status().isOk())
                 .andExpect(content().json("""
                     {
@@ -187,7 +184,6 @@ class SubscriptionControllerIntegrationTest {
                         "status": "CANCELLED"
                     }
                     """))
-                .andExpect(jsonPath("$.startDate").exists())
                 .andExpect(jsonPath("$.endDate").exists());
     }
 

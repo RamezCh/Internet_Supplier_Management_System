@@ -7,6 +7,8 @@ import com.github.ramezch.backend.exceptions.CustomerSubscriptionNotFoundExcepti
 import com.github.ramezch.backend.exceptions.InternetPlanNotFoundException;
 import com.github.ramezch.backend.internetplan.models.InternetPlan;
 import com.github.ramezch.backend.internetplan.repositories.InternetPlanRepository;
+import com.github.ramezch.backend.invoice.models.InvoiceDTO;
+import com.github.ramezch.backend.invoice.services.InvoiceService;
 import com.github.ramezch.backend.subscription.models.Subscription;
 import com.github.ramezch.backend.subscription.models.SubscriptionDTO;
 import com.github.ramezch.backend.subscription.models.SubscriptionDetailsDTO;
@@ -28,22 +30,27 @@ public class SubscriptionService {
     private final InternetPlanRepository internetPlanRepo;
     private final CustomerRepository customerRepo;
     private final IdService idService;
+    private final InvoiceService invoiceService;
 
     public void createSubscription(String customerId, String internetPlanId) {
-        internetPlanRepo.findById(internetPlanId)
+       InternetPlan internetPlan =  internetPlanRepo.findById(internetPlanId)
                 .orElseThrow(() -> new InternetPlanNotFoundException(internetPlanId));
 
         Instant startDate = Instant.now();
         Instant endDate = startDate.plus(30, ChronoUnit.DAYS); // Default 1 month duration
 
+        String subId = idService.randomId();
+
         Subscription subscription = new Subscription(
-                idService.randomId(),
+                subId,
                 customerId,
                 internetPlanId,
-                startDate,
                 endDate,
                 SubscriptionStatus.ACTIVE
         );
+
+        InvoiceDTO newInvoiceDTO = new InvoiceDTO(customerId, subId, endDate, internetPlan.price());
+        invoiceService.generateInvoice(newInvoiceDTO);
 
         subscriptionRepo.save(subscription);
     }
@@ -61,7 +68,6 @@ public class SubscriptionService {
                             subscription.id(),
                             customer,
                             internetPlan,
-                            subscription.startDate(),
                             subscription.endDate(),
                             subscription.status()
                     );
@@ -85,7 +91,6 @@ public class SubscriptionService {
                 existing.id(),
                 dto.customerId(),
                 dto.internetPlanId(),
-                dto.startDate(),
                 dto.endDate(),
                 dto.status()
         );
