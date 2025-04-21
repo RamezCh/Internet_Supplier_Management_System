@@ -42,9 +42,10 @@ public class ScheduledTasks {
             }
     }
 
-    private void processSubscription(Subscription subscription) {
+    void processSubscription(Subscription subscription) {
         if (subscription.isExpiringSoon()) {
             subscriptionRepository.save(subscription.withStatus(SubscriptionStatus.EXPIRING));
+            return;
         }
 
         Invoice subscriptionInvoice = invoiceService.getInvoice(subscription.id(), subscription.endDate());
@@ -61,7 +62,7 @@ public class ScheduledTasks {
         }
     }
 
-    private void renewSubscription(Subscription subscription) {
+    void renewSubscription(Subscription subscription) {
         Instant newEndDate = subscription.endDate().plus(Duration.ofDays(30));
         subscriptionRepository.save(
                 subscription.withStatus(SubscriptionStatus.ACTIVE)
