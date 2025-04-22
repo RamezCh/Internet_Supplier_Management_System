@@ -126,10 +126,6 @@ export const ManageSubscription = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <p className="block text-sm font-medium text-gray-500">Start Date</p>
-                        <p className="mt-1 text-gray-900">{new Date(subscription.startDate).toLocaleDateString()}</p>
-                    </div>
-                    <div>
                         <p className="block text-sm font-medium text-gray-500">End Date</p>
                         <p className="mt-1 text-gray-900">{new Date(subscription.endDate).toLocaleDateString()}</p>
                     </div>

@@ -176,14 +176,6 @@ export const CustomerSubscription = () => {
                         <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
                             <FaCalendarAlt className="text-blue-500 text-xl" />
                             <div>
-                                <p className="text-sm text-gray-500">Start Date</p>
-                                <p className="font-medium">{new Date(subscription.startDate).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                            <FaCalendarAlt className="text-blue-500 text-xl" />
-                            <div>
                                 <p className="text-sm text-gray-500">End Date</p>
                                 <p className="font-medium">{new Date(subscription.endDate).toLocaleDateString()}</p>
                             </div>
