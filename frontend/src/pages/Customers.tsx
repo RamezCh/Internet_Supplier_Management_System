@@ -262,21 +262,30 @@ export const Customers = () => {
                 <>
                     <div className="grid gap-2">
                         {customers.length > 0 && (
-                            <div className="flex justify-between items-start w-full p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                                {/* Header row using consistent spacing */}
-                                <div className="flex gap-4 flex-grow">
+                            <div className="hidden md:flex justify-between items-start w-full p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                                {/* Header row with dynamic spacing */}
+                                <div className="flex gap-18 flex-grow overflow-hidden">
                                     {/* Always visible columns */}
-                                    <div className="min-w-[200px]"><span className="font-medium text-gray-600">Username</span></div>
-                                    <div className="min-w-[200px]"><span className="font-medium text-gray-600">Name</span></div>
+                                    <div className="min-w-[150px] max-w-[150px]"><span className="font-medium text-gray-600">Username</span></div>
+                                    <div className="min-w-[150px] max-w-[150px]"><span className="font-medium text-gray-600">Name</span></div>
 
-                                    {/* Conditionally invisible columns */}
-                                    <div className={`min-w-[200px] ${columnVisibility.phone ? '' : 'invisible'}`}><span className="font-medium text-gray-600">Phone</span></div>
-                                    <div className={`min-w-[200px] ${columnVisibility.address ? '' : 'invisible'}`}><span className="font-medium text-gray-600">Address</span></div>
-                                    <div className={`min-w-[200px] ${columnVisibility.status ? '' : 'invisible'}`}><span className="font-medium text-gray-600">Status</span></div>
-                                    <div className={`min-w-[200px] ${columnVisibility.registrationDate ? '' : 'invisible'}`}><span className="font-medium text-gray-600">Registered</span></div>
-                                    <div className={`min-w-[200px] ${columnVisibility.notes ? '' : 'invisible'}`}><span className="font-medium text-gray-600">Notes</span></div>
+                                    {/* Conditionally visible columns */}
+                                    {columnVisibility.phone && (
+                                        <div className="min-w-[120px] max-w-[120px]"><span className="font-medium text-gray-600">Phone</span></div>
+                                    )}
+                                    {columnVisibility.address && (
+                                        <div className="min-w-[180px] max-w-[180px]"><span className="font-medium text-gray-600">Address</span></div>
+                                    )}
+                                    {columnVisibility.status && (
+                                        <div className="min-w-[100px] max-w-[100px]"><span className="font-medium text-gray-600">Status</span></div>
+                                    )}
+                                    {columnVisibility.registrationDate && (
+                                        <div className="min-w-[160px] max-w-[160px]"><span className="font-medium text-gray-600">Registered</span></div>
+                                    )}
+                                    {columnVisibility.notes && (
+                                        <div className="min-w-[180px] max-w-[180px]"><span className="font-medium text-gray-600">Notes</span></div>
+                                    )}
                                 </div>
-
                                 <div className="min-w-[120px] ml-4"><span className="font-medium text-gray-600">Actions</span></div>
                             </div>
                         )}
