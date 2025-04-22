@@ -1,5 +1,5 @@
 import { Customer } from "../types";
-import { FaEdit, FaReceipt, FaTrash } from "react-icons/fa";
+import {FaEdit, FaShoppingBag, FaFileInvoiceDollar, FaTrash} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import {ReactNode} from "react";
 
@@ -75,12 +75,14 @@ const ResponsiveTableCell = ({
 
 interface ActionButtonsProps {
     handleViewSubscription: () => void;
+    handleViewInvoices: () => void;
     handleEdit: () => void;
     handleDelete: () => void;
 }
 
 const ActionButtons = ({
                            handleViewSubscription,
+                           handleViewInvoices,
                            handleEdit,
                            handleDelete
                        }: ActionButtonsProps) => (
@@ -90,7 +92,14 @@ const ActionButtons = ({
             className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors duration-200"
             aria-label="View Subscription"
         >
-            <FaReceipt className="w-4 h-4" />
+            <FaShoppingBag className="w-4 h-4" />
+        </button>
+        <button
+            onClick={handleViewInvoices}
+            className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-full transition-colors duration-200"
+            aria-label="View Invoices"
+        >
+            <FaFileInvoiceDollar className="w-4 h-4" />
         </button>
         <button
             onClick={handleEdit}
@@ -113,6 +122,7 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
     const navigate = useNavigate();
     const handleEdit = () => navigate(`/customer/${customer.id}/edit`);
     const handleViewSubscription = () => navigate(`/customer/subscription/${customer.id}`);
+    const handleViewInvoices = () => navigate(`/customer/${customer.id}/invoices`);
     const handleDelete = () => onDelete(customer.id);
 
     const formatAddress = () => {
@@ -157,6 +167,7 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
                 <div className="flex justify-end gap-3 mt-3">
                     <ActionButtons
                         handleViewSubscription={handleViewSubscription}
+                        handleViewInvoices={handleViewInvoices}
                         handleEdit={handleEdit}
                         handleDelete={handleDelete}
                     />
@@ -179,6 +190,7 @@ export const CustomerCard = ({ customer, onDelete, columnVisibility }: CustomerC
                 <div className="flex gap-3 ml-4 shrink-0">
                     <ActionButtons
                         handleViewSubscription={handleViewSubscription}
+                        handleViewInvoices={handleViewInvoices}
                         handleEdit={handleEdit}
                         handleDelete={handleDelete}
                     />

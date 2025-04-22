@@ -98,3 +98,19 @@ export interface SubscriptionDTO {
     endDate: string;
     status: SubscriptionStatus;
 }
+
+export interface Invoice {
+    id: string;
+    customerId: string;
+    subscriptionId: string;
+    issueDate: string;
+    dueDate: string;
+    amountDue: number;
+    amountPaid: number;
+    isPaid: boolean;
+}
+
+export interface InvoiceUpdateDTO {
+    id: string;
+    amountPaid: number;
+}
