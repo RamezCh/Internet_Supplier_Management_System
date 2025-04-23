@@ -1,31 +1,44 @@
 # Internet Supplier Management System
 
 ## Overview
-The **Internet Supplier Management System** is a web application that allows users to create accounts, log in, add customers, and manage them efficiently. The system is built with modern technologies for a secure and scalable solution.
+The **Internet Supplier Management System** is a robust full-stack web application designed to manage internet customers efficiently. Users can create accounts, log in via secure OAuth, and perform customer operations such as adding, viewing, editing, and deleting records. The application leverages modern frameworks and libraries for optimal performance, scalability, and security.
 
 ## Features
-- User authentication with **OAuth** for fast and secure login.
-- Account creation and login functionality.
-- Customer management (Add, Edit, Delete, View).
-- API endpoints for seamless integration.
-- Containerized deployment with **Docker**.
-- Comprehensive **unit and integration testing** using **Mockito** and **Flapdoodle**.
+- **OAuth Authentication** with Google and GitHub.
+- **User Management**: Register and log in users securely.
+- **Customer Management**: Add, update, delete, and view customer data.
+- **Spring Scheduling**: For periodic tasks such as generating invoices and updating subscription statuses.
+- **Jakarta Bean Validation**: Ensures data integrity with annotations for type validation.
+- **RESTful APIs** for easy integration.
+- **Dockerized Deployment** with CI/CD pipelines via **GitHub Actions**.
+- **Unit & Integration Testing** using **Mockito** and **Flapdoodle Embedded MongoDB**.
 
 ## Tech Stack
+
 ### Backend:
 - **Java**
 - **Spring Boot**
+- **Spring Scheduling**
+- **Lombok**
 - **MongoDB**
-- **Mockito** (Unit Testing)
-- **Flapdoodle** (Integration Testing)
-- **OAuth** (Authentication)
+- **Mockito**
+- **Flapdoodle Embedded MongoDB**
+- **OAuth 2.0** (Google, GitHub)
+- **Jakarta Bean Validation** (for type validation)
 
 ### Frontend:
 - **React**
 - **TypeScript**
 
 ### DevOps:
-- **Docker** (for CI/CD)
+- **Docker**
+- **Git & GitHub**
+- **GitHub Actions** (CI/CD)
 
-### Demo:
+## Demo
+
 [Check out the Website](https://internet-supplier-management-system.onrender.com)
+
+![Login](/imagesreadme/ISMS_Login.png)
+
+![Home Page](/imagesreadme/ISMS_HomePage.png)
