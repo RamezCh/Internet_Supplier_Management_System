@@ -4,15 +4,18 @@ import { ReactNode } from 'react';
 interface LinkProps {
     to: To;
     children: ReactNode;
+    onClick?: () => void;
 }
 
 export const Link = ({
                          to,
-                         children
+                         children,
+                         onClick
                      }: LinkProps) => {
     return (
         <NavLink
             to={to}
+            onClick={onClick}
             className={({ isActive }) =>
                 `px-4 py-3 rounded-lg text-lg font-semibold transition-all duration-200 ${
                     isActive

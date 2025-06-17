@@ -1,4 +1,4 @@
-import { KeyboardEvent, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -61,7 +61,7 @@ export const Customers = () => {
     ];
     const pageSizeOptions = [5, 10, 15, 20];
 
-    const fetchCustomers = async (
+    const fetchCustomers = useCallback(async (
         page: number,
         size: number,
         direction: SortDirection,
@@ -95,7 +95,7 @@ export const Customers = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [searchQuery, status]);
 
     const toggleSort = () => {
         const next: SortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -140,7 +140,23 @@ export const Customers = () => {
     const toggleColumnVisibility = (column: keyof ColumnVisibility) => {
         if (column === 'username' || column === 'fullName') return;
         setColumnVisibility(prev => ({ ...prev, [column]: !prev[column] }));
+        setShowColumnMenu(false); // Close the menu after selection
     };
+
+    // Close column menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (showColumnMenu && !target.closest('.column-menu-container')) {
+                setShowColumnMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showColumnMenu]);
 
     const getSortIcon = () => {
         switch (sortDirection) {
@@ -152,20 +168,22 @@ export const Customers = () => {
 
     useEffect(() => {
         fetchCustomers(0, pageSize, sortDirection);
-    }, []);
+    }, [fetchCustomers, pageSize, sortDirection]);
 
     return (
         <div className="flex flex-col gap-4 p-4 max-w-full">
             {/* Search and Actions */}
             <div className="flex flex-col sm:flex-row items-center mb-5 gap-4 w-full">
-                <Input
-                    label="Search Bar"
-                    placeholder="Search by username, name, city..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    containerClassName="flex-grow w-full sm:w-auto mb-0"
-                />
+                <div className="w-full sm:flex-grow">
+                    <Input
+                        label="Search Bar"
+                        placeholder="Search by username, name, city..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        containerClassName="w-full mb-0"
+                    />
+                </div>
                 <Button
                     onClick={() => fetchCustomers(0, pageSize, sortDirection)}
                     className="h-[42px] w-full sm:w-auto"
@@ -176,15 +194,16 @@ export const Customers = () => {
             </div>
 
             {/* Filters / Sort / Columns / PageSize */}
-            <div className="flex flex-col lg:flex-row items-center justify-between mb-5 gap-4 w-full">
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-5 gap-4 w-full">
+                {/* Status Filter Group */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
                     <RadioButton
                         name="customerStatus"
                         options={statusOptions}
                         selectedValue={status}
                         onChange={setStatus}
                         orientation="horizontal"
-                        className="p-4 border rounded-lg w-full sm:w-auto"
+                        className="p-4 border rounded-lg w-full overflow-x-auto"
                     />
                     <Button
                         onClick={resetFilters}
@@ -196,59 +215,62 @@ export const Customers = () => {
                     </Button>
                 </div>
 
-                <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-normal">
-                    <Button
-                        onClick={toggleSort}
-                        variant="secondary"
-                        className="h-[42px] flex items-center"
-                    >
-                        Sort by Date{getSortIcon()}
-                    </Button>
-
-                    <div className="relative w-full sm:w-auto">
+                {/* Sort, Columns, and Page Size Group */}
+                <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                    <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
                         <Button
-                            onClick={() => setShowColumnMenu(!showColumnMenu)}
+                            onClick={toggleSort}
                             variant="secondary"
-                            className="h-[42px] flex items-center gap-2 w-full sm:w-auto"
+                            className="h-[42px] flex items-center"
                         >
-                            <FaColumns /> Columns
+                            Sort by Date{getSortIcon()}
                         </Button>
-                        {showColumnMenu && (
-                            <div className="absolute right-0 mt-2 w-full sm:w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                                <div className="p-2">
-                                    <div className="flex items-center gap-2 p-1 opacity-50 cursor-not-allowed">
-                                        <input type="checkbox" checked disabled className="rounded text-blue-600" /> <span>Username</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 p-1 opacity-50 cursor-not-allowed">
-                                        <input type="checkbox" checked disabled className="rounded text-blue-600" /> <span>Full Name</span>
-                                    </div>
-                                    {Object.entries(columnVisibility)
-                                        .filter(([k]) => k !== 'username' && k !== 'fullName')
-                                        .map(([key, visible]) => (
-                                            <label key={key} className="flex items-center gap-2 p-1 hover:bg-gray-100 cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={visible}
-                                                    onChange={() => toggleColumnVisibility(key as keyof ColumnVisibility)}
-                                                    className="rounded text-blue-600"
-                                                />
-                                                <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                            </label>
-                                        ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <span className="text-sm text-gray-600">Items per page:</span>
-                        <select
-                            value={pageSize}
-                            onChange={e => handlePageSizeChange(Number(e.target.value))}
-                            className="border rounded-md p-1 text-sm w-full sm:w-auto"
-                        >
-                            {pageSizeOptions.map(size => <option key={size} value={size}>{size}</option>)}
-                        </select>
+                        <div className="relative column-menu-container">
+                            <Button
+                                onClick={() => setShowColumnMenu(!showColumnMenu)}
+                                variant="secondary"
+                                className="h-[42px] flex items-center gap-2"
+                            >
+                                <FaColumns /> Columns
+                            </Button>
+                            {showColumnMenu && (
+                                <div className="absolute right-0 mt-2 w-64 sm:w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                    <div className="p-3">
+                                        <div className="flex items-center gap-2 p-2 opacity-50 cursor-not-allowed">
+                                            <input type="checkbox" checked disabled className="rounded text-blue-600 h-5 w-5" /> <span>Username</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 p-2 opacity-50 cursor-not-allowed">
+                                            <input type="checkbox" checked disabled className="rounded text-blue-600 h-5 w-5" /> <span>Full Name</span>
+                                        </div>
+                                        {Object.entries(columnVisibility)
+                                            .filter(([k]) => k !== 'username' && k !== 'fullName')
+                                            .map(([key, visible]) => (
+                                                <label key={key} className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={visible}
+                                                        onChange={() => toggleColumnVisibility(key as keyof ColumnVisibility)}
+                                                        className="rounded text-blue-600 h-5 w-5"
+                                                    />
+                                                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                                </label>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 whitespace-nowrap">Items per page:</span>
+                            <select
+                                value={pageSize}
+                                onChange={e => handlePageSizeChange(Number(e.target.value))}
+                                className="border rounded-md p-2 text-sm min-w-[60px]"
+                            >
+                                {pageSizeOptions.map(size => <option key={size} value={size}>{size}</option>)}
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>

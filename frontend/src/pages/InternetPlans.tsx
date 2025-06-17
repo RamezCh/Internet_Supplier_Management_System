@@ -54,14 +54,34 @@ export const InternetPlans = () => {
 
     if (internetPlans.length === 0) {
         return (
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-600">
-                No internet plans available.
+            <div className="space-y-6 p-4">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800">Internet Plans</h1>
+                    <Button 
+                        onClick={() => navigate('/internet-plan/add')}
+                        className="flex items-center gap-2"
+                    >
+                        Add New Plan
+                    </Button>
+                </div>
+                <div className="p-6 bg-blue-50 rounded-lg border border-blue-200 text-blue-600 text-center">
+                    No internet plans available. Click "Add New Plan" to create one.
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-4">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Internet Plans</h1>
+                <Button 
+                    onClick={() => navigate('/internet-plan/add')}
+                    className="flex items-center gap-2"
+                >
+                    Add New Plan
+                </Button>
+            </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {internetPlans.map((plan) => (
                     <div
